@@ -37,7 +37,6 @@ const content = {
       ['Agendar', '#agendar'],
     ],
     hero: {
-      eyebrow: 'Medicina fetal en San Pedro Sula',
       titleLead: 'Medicina fetal con ',
       titleMorphs: [
         'claridad y cuidado.',
@@ -55,7 +54,6 @@ const content = {
       { icon: MapPin, value: 'SPS, Honduras', label: 'Nuevos Horizontes Business Center' },
     ],
     services: {
-      eyebrow: 'Nuestros servicios',
       title: 'Estudios especializados para cada etapa del embarazo.',
       subtitle:
         'Evaluaciones con tecnología avanzada, explicación médica clara y un ambiente pensado para generar calma.',
@@ -83,7 +81,6 @@ const content = {
       ],
     },
     specialist: {
-      eyebrow: 'Nuestra especialista',
       name: 'Dra. Mónica García',
       role: 'Especialista en Medicina Materno Fetal',
       body:
@@ -91,7 +88,6 @@ const content = {
       points: ['Medicina fetal certificada', 'Ultrasonido avanzado', 'Atención personalizada'],
     },
     appointment: {
-      eyebrow: 'Agendar cita',
       title: 'Elige la forma de contacto que te resulte más cómoda.',
       subtitle:
         'Para una mejor orientación, comparte tus semanas de embarazo, el estudio indicado y si vienes referida por tu médico.',
@@ -109,7 +105,6 @@ const content = {
       ['Booking', '#agendar'],
     ],
     hero: {
-      eyebrow: 'Fetal medicine in San Pedro Sula',
       titleLead: 'Fetal medicine with ',
       titleMorphs: [
         'clarity and care.',
@@ -127,7 +122,6 @@ const content = {
       { icon: MapPin, value: 'SPS, Honduras', label: 'Nuevos Horizontes Business Center' },
     ],
     services: {
-      eyebrow: 'Our services',
       title: 'Specialized studies for every stage of pregnancy.',
       subtitle:
         'Advanced technology, clear medical explanations, and a calm environment for families.',
@@ -155,7 +149,6 @@ const content = {
       ],
     },
     specialist: {
-      eyebrow: 'Our specialist',
       name: 'Dr. Monica Garcia',
       role: 'Maternal-Fetal Medicine Specialist',
       body:
@@ -163,7 +156,6 @@ const content = {
       points: ['Certified fetal medicine', 'Advanced ultrasound', 'Personalized care'],
     },
     appointment: {
-      eyebrow: 'Book appointment',
       title: 'Choose the contact option that feels easiest.',
       subtitle:
         'For better guidance, share your pregnancy week, the requested study, and whether you were referred by your doctor.',
@@ -287,7 +279,6 @@ function App() {
         <section className="pt-28 md:pt-32">
           <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 py-14 md:px-8 md:py-20 lg:grid-cols-[0.95fr_1.05fr]">
             <div className="max-w-2xl">
-              <p data-reveal className="mb-5 text-xs font-bold uppercase tracking-[0.22em] text-[#797979]">{t.hero.eyebrow}</p>
               <h1 data-reveal style={{ '--reveal-delay': '40ms' }} className="text-5xl font-black leading-[0.98] tracking-normal text-[#272829] md:text-7xl">
                 {t.hero.titleLead}
                 <TextMorph
@@ -326,8 +317,7 @@ function App() {
                   <img src={images.office} alt="Consultorio CEHMEFE" className="h-56 w-full object-cover" />
                 </div>
                 <div data-reveal style={{ '--reveal-delay': '260ms' }} className="bg-[#272829] p-6 text-white">
-                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#A1A0A1]">CEHMEFE</p>
-                  <p className="mt-4 text-2xl font-black leading-tight">
+                  <p className="text-2xl font-black leading-tight">
                     {lang === 'es' ? 'Claridad médica para una etapa sensible.' : 'Medical clarity for a sensitive stage.'}
                   </p>
                 </div>
@@ -354,8 +344,7 @@ function App() {
         <section id="servicios" className="bg-[#F8F8F8] py-24 md:py-32">
           <div className="mx-auto max-w-7xl px-5 md:px-8">
             <div data-reveal className="max-w-3xl">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#797979]">{t.services.eyebrow}</p>
-              <h2 className="mt-4 text-4xl font-black leading-tight md:text-6xl">{t.services.title}</h2>
+              <h2 className="text-4xl font-black leading-tight md:text-6xl">{t.services.title}</h2>
               <p className="mt-5 text-lg leading-8 text-[#5F5F5F]">{t.services.subtitle}</p>
             </div>
 
@@ -385,8 +374,7 @@ function App() {
             </div>
 
             <div data-reveal style={{ '--reveal-delay': '140ms' }}>
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#797979]">{t.specialist.eyebrow}</p>
-              <h2 className="mt-4 text-4xl font-black leading-tight md:text-6xl">{t.specialist.name}</h2>
+              <h2 className="text-4xl font-black leading-tight md:text-6xl">{t.specialist.name}</h2>
               <p className="mt-3 text-lg font-semibold text-[#777]">{t.specialist.role}</p>
               <p className="mt-7 max-w-2xl text-lg leading-8 text-[#5F5F5F]">{t.specialist.body}</p>
               <div className="mt-8 grid gap-3 sm:grid-cols-3">
@@ -403,8 +391,7 @@ function App() {
         <section id="agendar" className="bg-[#272829] py-20 text-white md:py-24">
           <div className="mx-auto grid max-w-7xl items-start gap-12 px-5 md:px-8 lg:grid-cols-[0.95fr_1.05fr]">
             <div data-reveal>
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#A1A0A1]">{t.appointment.eyebrow}</p>
-              <h2 className="mt-4 text-4xl font-black leading-tight md:text-6xl">{t.appointment.title}</h2>
+              <h2 className="text-4xl font-black leading-tight md:text-6xl">{t.appointment.title}</h2>
               <p className="mt-6 max-w-xl text-lg leading-8 text-[#D7D3D3]">{t.appointment.subtitle}</p>
               <div className="mt-8 flex items-start gap-3 text-[#F6F1F1]">
                 <Clock className="mt-1 shrink-0" size={20} />
