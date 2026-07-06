@@ -8,6 +8,7 @@ import {
   Clock,
   HeartPulse,
   Instagram,
+  Mail,
   MapPin,
   Menu,
   MessageCircle,
@@ -88,15 +89,22 @@ const content = {
       points: ['Medicina fetal certificada', 'Ultrasonido avanzado', 'Atención personalizada'],
     },
     appointment: {
-      title: 'Elige la forma de contacto que te resulte más cómoda.',
+      title: 'Agenda tu cita o escríbenos.',
       subtitle:
-        'Para una mejor orientación, comparte tus semanas de embarazo, el estudio indicado y si vienes referida por tu médico.',
+        'Atendemos por WhatsApp, llamada o correo. Para orientarte mejor, comparte tus semanas de embarazo, el estudio indicado y si vienes referida por tu médico.',
       hours: 'Lunes a viernes 8:00 AM - 6:00 PM · Sábado 9:00 AM - 1:00 PM',
+      address: 'Local 1503, Nivel 15, Nuevos Horizontes Business Center, San Pedro Sula.',
+      email: 'info@cehmefe.com',
       whatsapp: 'WhatsApp',
       call: 'Llamar',
-      form: 'Formulario',
+      directions: 'Abrir en Google Maps',
     },
-    footer: '© 2026 CEHMEFE. Centro Hondureño de Medicina Fetal.',
+    footer: {
+      description: 'Centro Hondureño de Medicina Fetal. Estudios especializados, tecnología avanzada y acompañamiento médico claro y humano.',
+      contact: 'Contacto',
+      links: 'Enlaces',
+      rights: '© 2026 CEHMEFE. Centro Hondureño de Medicina Fetal.',
+    },
   },
   en: {
     nav: [
@@ -156,15 +164,22 @@ const content = {
       points: ['Certified fetal medicine', 'Advanced ultrasound', 'Personalized care'],
     },
     appointment: {
-      title: 'Choose the contact option that feels easiest.',
+      title: 'Book your visit or write to us.',
       subtitle:
-        'For better guidance, share your pregnancy week, the requested study, and whether you were referred by your doctor.',
+        'We respond by WhatsApp, phone, or email. For better guidance, share your pregnancy week, the requested study, and whether you were referred by your doctor.',
       hours: 'Monday to Friday 8:00 AM - 6:00 PM · Saturday 9:00 AM - 1:00 PM',
+      address: 'Suite 1503, Level 15, Nuevos Horizontes Business Center, San Pedro Sula.',
+      email: 'info@cehmefe.com',
       whatsapp: 'WhatsApp',
       call: 'Call',
-      form: 'Form',
+      directions: 'Open in Google Maps',
     },
-    footer: '© 2026 CEHMEFE. Honduran Center for Fetal Medicine.',
+    footer: {
+      description: 'Honduran Center for Fetal Medicine. Specialized studies, advanced technology, and clear, human medical accompaniment.',
+      contact: 'Contact',
+      links: 'Links',
+      rights: '© 2026 CEHMEFE. Honduran Center for Fetal Medicine.',
+    },
   },
 };
 
@@ -388,55 +403,127 @@ function App() {
           </div>
         </section>
 
-        <section id="agendar" className="bg-[#272829] py-20 text-white md:py-24">
-          <div className="mx-auto grid max-w-7xl items-start gap-12 px-5 md:px-8 lg:grid-cols-[0.95fr_1.05fr]">
-            <div data-reveal>
-              <h2 className="text-4xl font-black leading-tight md:text-6xl">{t.appointment.title}</h2>
-              <p className="mt-6 max-w-xl text-lg leading-8 text-[#D7D3D3]">{t.appointment.subtitle}</p>
-              <div className="mt-8 flex items-start gap-3 text-[#F6F1F1]">
-                <Clock className="mt-1 shrink-0" size={20} />
-                <p className="leading-7">{t.appointment.hours}</p>
+        <section id="agendar" className="bg-[#F6F1F1] py-20 md:py-24">
+          <div className="mx-auto max-w-7xl px-5 md:px-8">
+            <div className="grid items-start gap-12 lg:grid-cols-[0.9fr_1fr]">
+              <div data-reveal>
+                <h2 className="text-4xl font-black leading-tight text-[#272829] md:text-6xl">{t.appointment.title}</h2>
+                <p className="mt-6 max-w-xl text-lg leading-8 text-[#5F5F5F]">{t.appointment.subtitle}</p>
+                <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                  <a
+                    href="https://wa.me/50494401234"
+                    className="inline-flex items-center justify-center gap-2 rounded-md bg-[#272829] px-6 py-4 text-sm font-bold text-white transition hover:bg-black"
+                  >
+                    <MessageCircle size={18} />
+                    {t.appointment.whatsapp}
+                  </a>
+                  <a
+                    href="tel:+50494401234"
+                    className="inline-flex items-center justify-center gap-2 rounded-md border border-[#A1A0A1] px-6 py-4 text-sm font-bold text-[#272829] transition hover:border-[#272829] hover:bg-white"
+                  >
+                    <Phone size={18} />
+                    {t.appointment.call} +504 9440-1234
+                  </a>
+                </div>
+              </div>
+
+              <div data-reveal style={{ '--reveal-delay': '120ms' }} className="rounded-md border border-[#DDD8D8] bg-white p-7 shadow-[0_20px_50px_-35px_rgba(0,0,0,0.35)] md:p-9">
+                <div className="grid gap-8 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <h3 className="text-lg font-black text-[#272829]">{lang === 'es' ? 'Dirección' : 'Address'}</h3>
+                    <p className="mt-2 leading-7 text-[#5F5F5F]">{t.appointment.address}</p>
+                    <a
+                      href="https://www.google.com/maps/search/?api=1&query=Nuevos%20Horizontes%20Business%20Center%20San%20Pedro%20Sula%20Honduras"
+                      className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[#272829] underline underline-offset-4"
+                    >
+                      {t.appointment.directions}
+                      <ChevronRight size={15} />
+                    </a>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-black text-[#272829]">{lang === 'es' ? 'Horario' : 'Hours'}</h3>
+                    <div className="mt-2 flex items-start gap-3 text-[#5F5F5F]">
+                      <Clock className="mt-1 shrink-0 text-[#272829]" size={18} />
+                      <p className="leading-7">{t.appointment.hours}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-black text-[#272829]">{lang === 'es' ? 'Correo' : 'Email'}</h3>
+                    <div className="mt-2 flex items-start gap-3 text-[#5F5F5F]">
+                      <Mail className="mt-1 shrink-0 text-[#272829]" size={18} />
+                      <a href="mailto:info@cehmefe.com" className="leading-7 hover:text-[#272829]">{t.appointment.email}</a>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="grid self-center gap-3 sm:grid-cols-3">
-              <a data-reveal href="https://wa.me/50494401234" className="group flex min-h-32 items-start gap-4 rounded-md bg-white p-5 text-[#272829] transition hover:bg-[#F6F1F1]">
-                <MessageCircle className="mt-1 shrink-0 transition group-hover:scale-105" size={24} />
-                <div>
-                  <h3 className="text-xl font-black">{t.appointment.whatsapp}</h3>
-                  <p className="mt-2 text-sm text-[#666]">+504 9440-1234</p>
-                </div>
-              </a>
-              <a data-reveal style={{ '--reveal-delay': '90ms' }} href="tel:+50494401234" className="group flex min-h-32 items-start gap-4 rounded-md bg-white p-5 text-[#272829] transition hover:bg-[#F6F1F1]">
-                <Phone className="mt-1 shrink-0 transition group-hover:scale-105" size={24} />
-                <div>
-                  <h3 className="text-xl font-black">{t.appointment.call}</h3>
-                  <p className="mt-2 text-sm text-[#666]">+504 9440-1234</p>
-                </div>
-              </a>
-              <a data-reveal style={{ '--reveal-delay': '180ms' }} href="mailto:info@cehmefe.com" className="group flex min-h-32 items-start gap-4 rounded-md bg-white p-5 text-[#272829] transition hover:bg-[#F6F1F1]">
-                <CalendarCheck className="mt-1 shrink-0 transition group-hover:scale-105" size={24} />
-                <div>
-                  <h3 className="text-xl font-black">{t.appointment.form}</h3>
-                  <p className="mt-2 whitespace-nowrap text-xs text-[#666] sm:text-[13px]">info@cehmefe.com</p>
-                </div>
-              </a>
+            <div data-reveal className="mt-14 overflow-hidden rounded-md border border-[#DDD8D8] bg-white">
+              <iframe
+                title="CEHMEFE location map"
+                src="https://www.google.com/maps?q=Nuevos%20Horizontes%20Business%20Center%20San%20Pedro%20Sula%20Honduras&output=embed"
+                className="h-[340px] w-full border-0 md:h-[420px]"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="bg-white py-12">
-        <div data-reveal className="mx-auto flex max-w-7xl flex-col gap-8 px-5 md:flex-row md:items-center md:justify-between md:px-8">
-          <img src={logo} alt="CEHMEFE" className="h-20 w-auto object-contain mix-blend-multiply" />
-          <div className="text-sm leading-7 text-[#666] md:text-right">
-            <p>Local 1503, Nivel 15, Nuevos Horizontes Business Center, San Pedro Sula.</p>
-            <p>{t.footer}</p>
+      <footer className="border-t border-[#E5E0E0] bg-white">
+        <div className="mx-auto grid max-w-7xl gap-12 px-5 py-14 md:grid-cols-[1.15fr_1fr_0.8fr] md:px-8 md:py-20">
+          <div data-reveal>
+            <img src={logo} alt="CEHMEFE" className="h-20 w-auto object-contain mix-blend-multiply" />
+            <p className="mt-6 max-w-sm text-sm leading-7 text-[#666]">{t.footer.description}</p>
+            <a
+              href="https://wa.me/50494401234"
+              className="mt-7 inline-flex items-center gap-2 rounded-md bg-[#272829] px-5 py-3 text-sm font-bold text-white transition hover:bg-black"
+            >
+              <MessageCircle size={17} />
+              {t.hero.primary}
+            </a>
           </div>
-          <a className="inline-flex items-center gap-2 text-sm font-bold text-[#272829]" href="https://www.instagram.com/cehmefe_fetalmed">
-            <Instagram size={18} />
-            @cehmefe_fetalmed
-          </a>
+
+          <div data-reveal style={{ '--reveal-delay': '90ms' }}>
+            <h2 className="text-xl font-black text-[#272829]">{t.footer.contact}</h2>
+            <div className="mt-6 space-y-5 text-sm leading-6 text-[#666]">
+              <p className="flex gap-3">
+                <MapPin className="mt-1 shrink-0 text-[#272829]" size={18} />
+                <span>{t.appointment.address}</span>
+              </p>
+              <p className="flex gap-3">
+                <Phone className="mt-1 shrink-0 text-[#272829]" size={18} />
+                <a href="tel:+50494401234" className="hover:text-[#272829]">+504 9440-1234</a>
+              </p>
+              <p className="flex gap-3">
+                <Mail className="mt-1 shrink-0 text-[#272829]" size={18} />
+                <a href="mailto:info@cehmefe.com" className="hover:text-[#272829]">info@cehmefe.com</a>
+              </p>
+            </div>
+          </div>
+
+          <div data-reveal style={{ '--reveal-delay': '180ms' }}>
+            <h2 className="text-xl font-black text-[#272829]">{t.footer.links}</h2>
+            <nav className="mt-6 flex flex-col gap-4 text-sm font-semibold text-[#666]">
+              <a href="#servicios" className="hover:text-[#272829]">{lang === 'es' ? 'Servicios' : 'Services'}</a>
+              <a href="#especialista" className="hover:text-[#272829]">{lang === 'es' ? 'Especialista' : 'Specialist'}</a>
+              <a href="#agendar" className="hover:text-[#272829]">{lang === 'es' ? 'Agendar cita' : 'Book appointment'}</a>
+              <a className="inline-flex items-center gap-2 hover:text-[#272829]" href="https://www.instagram.com/cehmefe_fetalmed">
+                <Instagram size={17} />
+                @cehmefe_fetalmed
+              </a>
+            </nav>
+          </div>
+        </div>
+
+        <div className="border-t border-[#E5E0E0]">
+          <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6 text-sm text-[#777] md:flex-row md:items-center md:justify-between md:px-8">
+            <p>{t.footer.rights}</p>
+            <p>San Pedro Sula, Honduras.</p>
+          </div>
         </div>
       </footer>
     </div>
