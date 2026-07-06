@@ -23,11 +23,11 @@ const asset = (path) => `${import.meta.env.BASE_URL}${path}`;
 
 const logo = asset('Logo/cehmefe-logo-cropped.png');
 const images = {
-  hero: asset('Fotos Dra. Mónica/IMG_6047.JPG'),
-  portrait: asset('Fotos Dra. Mónica/IMG_6048.JPG'),
-  office: asset('Fotos Dra. Mónica/IMG_1988.JPG'),
-  consult: asset('Fotos Dra. Mónica/IMG_1992.JPG'),
-  equipment: asset('Fotos Dra. Mónica/IMG_1986.JPG'),
+  hero: asset('doctor-photos/IMG_6047.JPG'),
+  portrait: asset('doctor-photos/IMG_6048.JPG'),
+  office: asset('doctor-photos/IMG_1988.JPG'),
+  consult: asset('doctor-photos/IMG_1992.JPG'),
+  equipment: asset('doctor-photos/IMG_1986.JPG'),
 };
 
 const content = {
