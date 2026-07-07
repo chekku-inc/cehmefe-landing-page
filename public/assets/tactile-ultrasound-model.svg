@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 500" role="img" aria-labelledby="title desc">
+  <title id="title">Tactile ultrasound model workflow</title>
+  <desc id="desc">An ultrasound screen connected to a digital file and a tactile 3D model held by a hand.</desc>
+  <rect width="720" height="500" rx="28" fill="#ffffff"/>
+  <path d="M74 376C114 319 177 287 249 291c98 6 130 67 223 73 68 5 129-20 174-62v124H74v-50Z" fill="#EAF4F7"/>
+  <path d="M84 97h212c17 0 31 14 31 31v130c0 17-14 31-31 31H84c-17 0-31-14-31-31V128c0-17 14-31 31-31Z" fill="#F8FBFC" stroke="#243F56" stroke-width="6"/>
+  <path d="M84 126h212v133H84z" fill="#20384C"/>
+  <path d="M141 214c13-47 50-75 90-64 37 11 53 52 35 89-19 40-74 51-107 22-14-12-23-28-18-47Z" fill="#D7EAF4"/>
+  <path d="M164 222c10-32 36-52 64-44 25 8 36 37 23 62-13 26-51 33-73 14-10-8-16-19-14-32Z" fill="#F7F0EC"/>
+  <path d="M198 189c-10 18-8 38 7 52m32-25c-18 2-30 13-34 29" fill="none" stroke="#243F56" stroke-width="5" stroke-linecap="round"/>
+  <path d="M153 331h74" stroke="#243F56" stroke-width="10" stroke-linecap="round"/>
+  <path d="M190 290v38" stroke="#243F56" stroke-width="10" stroke-linecap="round"/>
+  <path d="M401 126h97l44 44v147H401V126Z" fill="#F8FBFC" stroke="#243F56" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M498 126v44h44" fill="#D7EAF4" stroke="#243F56" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M428 220c20-11 45-11 65 0m-52 33c13-7 27-7 40 0" fill="none" stroke="#A1C7D8" stroke-width="9" stroke-linecap="round"/>
+  <path d="M360 217h-35m35 0-16-16m16 16-16 16" fill="none" stroke="#A1C7D8" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M586 231c30-9 62 13 69 48 5 27-8 54-33 67-23 12-52 7-70-13-15-18-18-43-8-63 8-17 21-32 42-39Z" fill="#F7F0EC" stroke="#243F56" stroke-width="6"/>
+  <path d="M592 265c-13 15-14 43 7 58m32-29c-21 2-35 15-40 34" fill="none" stroke="#243F56" stroke-width="6" stroke-linecap="round"/>
+  <path d="M509 353c23-15 46-12 69 9l13 12c8 7 19 8 28 2l27-19c13-9 30 7 21 21l-33 49H506l-31-34c-9-10-8-25 3-34 9-7 21-9 31-6Z" fill="#F5DED8" stroke="#243F56" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M532 376c19 7 38 18 55 34m-67 11h92" fill="none" stroke="#243F56" stroke-width="6" stroke-linecap="round"/>
+  <path d="M548 180h36m-18-18v36" stroke="#A1C7D8" stroke-width="7" stroke-linecap="round"/>
+  <path d="M596 170h26m-13-13v26" stroke="#A1C7D8" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="383" cy="217" r="8" fill="#A1C7D8"/>
+  <circle cx="564" cy="129" r="8" fill="#A1C7D8"/>
+  <circle cx="633" cy="207" r="6" fill="#A1C7D8"/>
+</svg>
