@@ -961,11 +961,11 @@ function App() {
                     {t.appointment.whatsapp} +504 3168-0805
                   </a>
                   <a
-                    href="tel:+50494401234"
+                    href="tel:+50431680805"
                     className="inline-flex items-center justify-center gap-2 rounded-md border border-white/60 px-6 py-4 text-sm font-bold text-white transition hover:border-white hover:bg-white/10"
                   >
                     <Phone size={18} />
-                    {t.appointment.call} +504 9440-1234
+                    {t.appointment.call} +504 3168-0805
                   </a>
                 </div>
               </div>
@@ -1040,7 +1040,7 @@ function App() {
               </p>
               <p className="flex gap-3">
                 <Phone className="mt-1 shrink-0 text-[#272829]" size={18} />
-                <a href="tel:+50494401234" className="hover:text-[#272829]">+504 9440-1234</a>
+                <a href="tel:+50431680805" className="hover:text-[#272829]">+504 3168-0805</a>
               </p>
               <p className="flex gap-3">
                 <Mail className="mt-1 shrink-0 text-[#272829]" size={18} />
