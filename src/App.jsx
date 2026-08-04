@@ -1,20 +1,30 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { TextMorph } from 'torph/react';
+import { AnimatePresence, motion } from 'motion/react';
 import heraTechnologyPost from './content/blog/hera-z20-tecnologia.md?raw';
 import modelsAccessibilityPost from './content/blog/modelos-3d-accesibilidad.md?raw';
 import ultrasoundWeekPost from './content/blog/ultrasonido-segun-semana.md?raw';
 import {
   Award,
+  Baby,
+  Brain,
   CalendarCheck,
   ChevronRight,
   Clock,
+  Dna,
+  HeartPulse,
   Instagram,
   Mail,
   MapPin,
   Menu,
   MessageCircle,
+  Microscope,
   Phone,
+  Ruler,
+  ScanLine,
   ShieldCheck,
+  Stethoscope,
+  Waves,
   X,
 } from 'lucide-react';
 
@@ -38,6 +48,142 @@ const studyImages = [
   asset('assets/study3.png'),
   asset('assets/study4.png'),
 ];
+
+// CEHMEFE palette, alternated across cards/chips (#272829 · #A1A0A1 · #F6F1F1 · #F8F8F8)
+const specialtyStyles = [
+  'border-transparent bg-[#272829] text-white',
+  'border-transparent bg-[#A1A0A1] text-white',
+  'border-[#E2DDDD] bg-[#F6F1F1] text-[#272829]',
+  'border-[#E2DDDD] bg-white text-[#272829]',
+];
+
+const specialtyIcons = [Stethoscope, Baby, ScanLine, Microscope, HeartPulse, Ruler, Waves, Brain];
+
+const guideIcons = [HeartPulse, Dna, Baby, Stethoscope];
+const guideIconStyles = [
+  'bg-[#272829] text-white',
+  'bg-[#A1A0A1] text-white',
+  'bg-[#F6F1F1] text-[#272829]',
+  'bg-[#EAF4F7] text-[#272829]',
+];
+
+// --- Interactive rotated cards (adapted from Aceternity "interface crafts cards") ---
+const serviceCardThemes = [
+  { card: 'bg-[#272829] text-white', desc: 'text-white/75' },
+  { card: 'bg-[#F6F1F1] text-[#272829] border border-[#E2DDDD]', desc: 'text-[#5F5F5F]' },
+  { card: 'bg-[#A1A0A1] text-white', desc: 'text-white/85' },
+  { card: 'bg-[#F8F8F8] text-[#272829] border border-[#E2DDDD]', desc: 'text-[#5F5F5F]' },
+];
+
+const serviceCardConfigs = [
+  { y: -18, rotate: -13, zIndex: 2 },
+  { y: 22, rotate: 7, zIndex: 3 },
+  { y: -46, rotate: -5, zIndex: 4 },
+  { y: 20, rotate: 11, zIndex: 5 },
+];
+
+const cardSpring = { type: 'spring', visualDuration: 0.6, bounce: 0.25 };
+
+function RotatedServiceCards({ items }) {
+  const [active, setActive] = useState(null);
+  const [spacing, setSpacing] = useState(230);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) {
+        setActive(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const update = () => setSpacing(mq.matches ? 230 : Math.round(230 * 0.36));
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
+  const middle = (items.length - 1) / 2;
+  const isAnyActive = active !== null;
+
+  return (
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
+      <motion.div
+        ref={ref}
+        onClick={() => setActive(null)}
+        className="relative mx-auto flex h-[540px] w-full max-w-5xl items-center justify-center [--height:330px] [--width:230px] lg:[--height:420px] lg:[--width:300px]"
+      >
+        {items.map((item, index) => {
+          const offsetX = (index - middle) * spacing;
+          const config = serviceCardConfigs[index % serviceCardConfigs.length];
+          const theme = serviceCardThemes[index % serviceCardThemes.length];
+          const isActive = active === index;
+
+          return (
+            <motion.div key={item.title}>
+              <motion.button
+                type="button"
+                initial={{ x: 0, scale: 0 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActive(index);
+                }}
+                animate={{
+                  y: isActive ? 0 : isAnyActive ? 420 : config.y,
+                  x: isActive ? 0 : isAnyActive ? offsetX * 0.4 : offsetX,
+                  rotate: isActive ? 0 : isAnyActive ? 0.2 * config.rotate : config.rotate,
+                  scale: isActive ? 1.12 : isAnyActive ? 0.7 : 1,
+                }}
+                whileHover={{
+                  scale: isActive ? 1.12 : isAnyActive ? 0.7 : 1.05,
+                }}
+                transition={cardSpring}
+                style={{
+                  width: 'var(--width)',
+                  height: 'var(--height)',
+                  marginLeft: 'calc(var(--width) / -2)',
+                  marginTop: 'calc(var(--height) / -2)',
+                  zIndex: isActive ? 50 : config.zIndex,
+                }}
+                className={`absolute top-1/2 left-1/2 flex cursor-pointer flex-col items-start justify-between overflow-hidden rounded-2xl p-3 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.45)] md:p-4 ${theme.card}`}
+              >
+                <div className="flex h-40 w-full items-center justify-center rounded-xl bg-white p-3 lg:h-48">
+                  <img src={item.image} alt="" aria-hidden="true" className="h-full w-full object-contain" loading="lazy" />
+                </div>
+                <div className="mt-4 w-full">
+                  <motion.h3
+                    layoutId={`${item.title}-title`}
+                    className="text-left text-lg font-black leading-tight lg:text-2xl"
+                  >
+                    {item.title}
+                  </motion.h3>
+                  <AnimatePresence mode="popLayout">
+                    {isActive && (
+                      <motion.p
+                        layoutId={`${item.title}-description`}
+                        initial={{ opacity: 0, x: 20, y: 20, height: 0 }}
+                        animate={{ opacity: 1, x: 0, y: 0, height: 'auto' }}
+                        exit={{ opacity: 0, x: 40, y: 40 }}
+                        transition={cardSpring}
+                        className={`mt-3 text-left text-xs leading-5 lg:text-sm lg:leading-6 ${theme.desc}`}
+                      >
+                        {item.desc}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.button>
+            </motion.div>
+          );
+        })}
+      </motion.div>
+    </div>
+  );
+}
 
 function parseBlogPost(markdown) {
   const match = markdown.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
@@ -203,12 +349,14 @@ const content = {
         'La atención combina experiencia clínica, evaluación cuidadosa y comunicación cercana. Cada estudio se explica con lenguaje claro para que las familias comprendan los hallazgos y puedan tomar decisiones con tranquilidad.',
       credentialsLabel: 'Especialidades y experiencia',
       points: [
-        'Medicina Materno Fetal',
         'Ginecología y Obstetricia',
+        'Medicina Fetal',
         'Ultrasonido obstétrico avanzado',
         'Diagnóstico prenatal',
         'Ecocardiografía fetal',
         'Seguimiento del crecimiento fetal',
+        'Ultrasonido Ginecológico',
+        'Neurosonografía Fetal',
       ],
     },
     appointment: {
@@ -362,12 +510,14 @@ const content = {
         'Care combines clinical experience, careful evaluation, and close communication. Every study is explained in clear language so families understand the findings and can make decisions calmly.',
       credentialsLabel: 'Specialties and experience',
       points: [
-        'Maternal-Fetal Medicine',
         'Obstetrics and Gynecology',
+        'Fetal Medicine',
         'Advanced obstetric ultrasound',
         'Prenatal diagnosis',
         'Fetal echocardiography',
         'Fetal growth follow-up',
+        'Gynecologic ultrasound',
+        'Fetal neurosonography',
       ],
     },
     appointment: {
@@ -546,52 +696,46 @@ function App() {
         </main>
       ) : (
         <main id="inicio">
-        <section className="pt-28 md:pt-32">
-          <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 py-14 md:px-8 md:py-20 lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="max-w-2xl">
-              <h1 data-reveal style={{ '--reveal-delay': '40ms' }} className="text-5xl font-black leading-[0.98] tracking-normal text-[#272829] md:text-7xl">
+        <section className="relative flex min-h-[92vh] items-end overflow-hidden">
+          <img
+            src={images.hero}
+            alt="Dra. Mónica García junto a equipo de ultrasonido"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#272829]/90 via-[#272829]/45 to-[#272829]/25" />
+
+          <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pb-16 pt-40 md:px-8 md:pb-24">
+            <div className="max-w-3xl">
+              <h1 data-reveal style={{ '--reveal-delay': '40ms' }} className="text-5xl font-black leading-[0.98] tracking-normal text-white md:text-7xl">
                 {t.hero.titleLead}
                 <TextMorph
                   as="span"
                   duration={720}
                   ease="cubic-bezier(0.22, 1, 0.36, 1)"
-                  className="hero-morph-title mt-2 block min-h-[2em] max-w-full md:min-h-[1em]"
+                  className="hero-morph-title mt-2 block min-h-[2em] max-w-full font-serif italic md:min-h-[1em]"
                 >
                   {t.hero.titleMorphs[heroTitleIndex]}
                 </TextMorph>
               </h1>
-              <p data-reveal style={{ '--reveal-delay': '90ms' }} className="mt-7 max-w-xl text-lg leading-8 text-[#5F5F5F]">{t.hero.subtitle}</p>
+              <p data-reveal style={{ '--reveal-delay': '90ms' }} className="mt-7 max-w-xl text-lg leading-8 text-white/85">{t.hero.subtitle}</p>
               <div data-reveal style={{ '--reveal-delay': '170ms' }} className="mt-9 flex flex-col gap-3 sm:flex-row">
                 <a
                   href="#agendar"
-                  className="inline-flex items-center justify-center gap-2 rounded-md bg-[#272829] px-6 py-4 text-sm font-bold text-white transition hover:bg-black"
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-white px-6 py-4 text-sm font-bold text-[#272829] transition hover:bg-[#F6F1F1]"
                 >
                   {t.hero.primary}
                   <CalendarCheck size={18} />
                 </a>
                 <a
                   href="#servicios"
-                  className="inline-flex items-center justify-center rounded-md border border-[#CFCACA] px-6 py-4 text-sm font-bold text-[#272829] transition hover:border-[#272829]"
+                  className="inline-flex items-center justify-center rounded-md border border-white/60 px-6 py-4 text-sm font-bold text-white transition hover:border-white hover:bg-white/10"
                 >
                   {t.hero.secondary}
                 </a>
               </div>
-            </div>
-
-            <div data-reveal style={{ '--reveal-delay': '120ms' }} className="grid gap-4 sm:grid-cols-[1fr_0.68fr]">
-              <div className="overflow-hidden rounded-md border border-[#E5E0E0] bg-white">
-                <img src={images.hero} alt="Dra. Mónica junto a equipo de ultrasonido" className="h-full min-h-[500px] w-full object-cover" />
-              </div>
-              <div className="grid gap-4">
-                <div className="overflow-hidden rounded-md border border-[#E5E0E0] bg-white">
-                  <img src={images.office} alt="Consultorio CEHMEFE" className="h-56 w-full object-cover" />
-                </div>
-                <div data-reveal style={{ '--reveal-delay': '260ms' }} className="bg-[#272829] p-6 text-white">
-                  <p className="text-2xl font-black leading-tight">
-                    {lang === 'es' ? 'Claridad médica para una etapa sensible.' : 'Medical clarity for a sensitive stage.'}
-                  </p>
-                </div>
-              </div>
+              <p data-reveal style={{ '--reveal-delay': '240ms' }} className="mt-10 max-w-md border-l-2 border-white/50 pl-4 text-xl font-black leading-tight text-white md:text-2xl">
+                {lang === 'es' ? 'Claridad médica para una etapa sensible.' : 'Medical clarity for a sensitive stage.'}
+              </p>
             </div>
           </div>
         </section>
@@ -618,24 +762,13 @@ function App() {
               <p className="mt-5 text-lg leading-8 text-[#5F5F5F]">{t.services.subtitle}</p>
             </div>
 
-            <div className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-              {t.services.items.map((service, index) => {
-                return (
-                  <article key={service.title} data-reveal className="flex min-h-[430px] flex-col rounded-md border border-[#E2DDDD] bg-white p-8">
-                    <div className="mb-10 flex h-52 items-center justify-center">
-                      <img
-                        src={studyImages[index]}
-                        alt=""
-                        aria-hidden="true"
-                        className="h-full w-full max-w-[245px] object-contain"
-                        loading="lazy"
-                      />
-                    </div>
-                    <h3 className="text-xl font-black leading-tight">{service.title}</h3>
-                    <p className="mt-4 text-sm leading-6 text-[#656565]">{service.desc}</p>
-                  </article>
-                );
-              })}
+            <div data-reveal className="mt-6">
+              <p className="text-center text-xs font-bold uppercase tracking-[0.18em] text-[#A1A0A1]">
+                {lang === 'es' ? 'Toca una tarjeta para ver el detalle' : 'Tap a card to see details'}
+              </p>
+              <RotatedServiceCards
+                items={t.services.items.map((service, index) => ({ ...service, image: studyImages[index] }))}
+              />
             </div>
 
             <div data-reveal className="mt-8 rounded-md border border-[#E2DDDD] bg-white p-6 md:p-8">
@@ -719,12 +852,8 @@ function App() {
 
         <section id="especialista" className="bg-white py-24 md:py-32">
           <div className="mx-auto grid max-w-7xl gap-12 px-5 md:px-8 lg:grid-cols-[0.78fr_1fr] lg:items-center">
-            <div data-reveal className="grid grid-cols-[0.72fr_1fr] gap-4">
-              <img src={images.portrait} alt={t.specialist.name} className="h-full min-h-[480px] w-full rounded-md object-cover" />
-              <div className="grid gap-4">
-                <img src={images.consult} alt="Atención durante ultrasonido" className="h-60 w-full rounded-md object-cover" />
-                <img src={images.equipment} alt="Equipo de ultrasonido" className="h-60 w-full rounded-md object-cover" />
-              </div>
+            <div data-reveal className="overflow-hidden rounded-md border border-[#E5E0E0]">
+              <img src={images.portrait} alt={t.specialist.name} className="h-full min-h-[480px] w-full object-cover md:min-h-[560px]" />
             </div>
 
             <div data-reveal style={{ '--reveal-delay': '140ms' }}>
@@ -733,11 +862,18 @@ function App() {
               <p className="mt-7 max-w-2xl text-lg leading-8 text-[#5F5F5F]">{t.specialist.body}</p>
               <p className="mt-8 text-sm font-black uppercase tracking-[0.14em] text-[#6A8390]">{t.specialist.credentialsLabel}</p>
               <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {t.specialist.points.map((point) => (
-                  <div key={point} className="rounded-md border border-[#E2DDDD] bg-[#F8F8F8] px-4 py-4 text-sm font-bold">
-                    {point}
-                  </div>
-                ))}
+                {t.specialist.points.map((point, index) => {
+                  const Icon = specialtyIcons[index % specialtyIcons.length];
+                  return (
+                    <div
+                      key={point}
+                      className={`flex items-center gap-3 rounded-md border px-4 py-4 text-sm font-bold ${specialtyStyles[index % specialtyStyles.length]}`}
+                    >
+                      <Icon size={20} strokeWidth={1.9} className="shrink-0" />
+                      <span>{point}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -786,37 +922,47 @@ function App() {
             </p>
 
             <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-              {t.guide.items.map((item, index) => (
+              {t.guide.items.map((item, index) => {
+                const GuideIcon = guideIcons[index % guideIcons.length];
+                return (
                 <article key={item.range} data-reveal style={{ '--reveal-delay': `${index * 70}ms` }} className="rounded-md border border-[#E2DDDD] bg-white p-6">
-                  <div className="mb-7 flex h-14 w-14 items-center justify-center rounded-full bg-[#EAF4F7] text-lg font-black text-[#272829]">
-                    {index + 1}
+                  <div className={`mb-7 flex h-14 w-14 items-center justify-center rounded-full ${guideIconStyles[index % guideIconStyles.length]}`}>
+                    <GuideIcon size={26} strokeWidth={1.8} />
                   </div>
                   <p className="text-sm font-black text-[#6A8390]">{item.range}</p>
                   <h3 className="mt-3 text-xl font-black leading-tight">{item.title}</h3>
                   <p className="mt-4 text-sm leading-6 text-[#656565]">{item.desc}</p>
                 </article>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
 
-        <section id="agendar" className="bg-[#F6F1F1] py-20 md:py-24">
-          <div className="mx-auto max-w-7xl px-5 md:px-8">
+        <section id="agendar" className="relative overflow-hidden py-20 md:py-24">
+          <img
+            src={images.office}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-[#272829]/80" />
+          <div className="relative z-10 mx-auto max-w-7xl px-5 md:px-8">
             <div className="grid items-start gap-12 lg:grid-cols-[0.9fr_1fr]">
               <div data-reveal>
-                <h2 className="text-4xl font-black leading-tight text-[#272829] md:text-6xl">{t.appointment.title}</h2>
-                <p className="mt-6 max-w-xl text-lg leading-8 text-[#5F5F5F]">{t.appointment.subtitle}</p>
+                <h2 className="text-4xl font-black leading-tight text-white md:text-6xl">{t.appointment.title}</h2>
+                <p className="mt-6 max-w-xl text-lg leading-8 text-white/85">{t.appointment.subtitle}</p>
                 <div className="mt-9 flex flex-col gap-3 sm:flex-row">
                   <a
-                    href="https://wa.me/50494401234"
-                    className="inline-flex items-center justify-center gap-2 rounded-md bg-[#272829] px-6 py-4 text-sm font-bold text-white transition hover:bg-black"
+                    href="https://wa.me/50431680805"
+                    className="inline-flex items-center justify-center gap-2 rounded-md bg-white px-6 py-4 text-sm font-bold text-[#272829] transition hover:bg-[#F6F1F1]"
                   >
                     <MessageCircle size={18} />
-                    {t.appointment.whatsapp}
+                    {t.appointment.whatsapp} +504 3168-0805
                   </a>
                   <a
                     href="tel:+50494401234"
-                    className="inline-flex items-center justify-center gap-2 rounded-md border border-[#A1A0A1] px-6 py-4 text-sm font-bold text-[#272829] transition hover:border-[#272829] hover:bg-white"
+                    className="inline-flex items-center justify-center gap-2 rounded-md border border-white/60 px-6 py-4 text-sm font-bold text-white transition hover:border-white hover:bg-white/10"
                   >
                     <Phone size={18} />
                     {t.appointment.call} +504 9440-1234
@@ -877,7 +1023,7 @@ function App() {
             <img src={logo} alt="CEHMEFE" className="h-28 w-28 object-contain" />
             <p className="mt-6 max-w-sm text-sm leading-7 text-[#666]">{t.footer.description}</p>
             <a
-              href="https://wa.me/50494401234"
+              href="https://wa.me/50431680805"
               className="mt-7 inline-flex items-center gap-2 rounded-md bg-[#272829] px-5 py-3 text-sm font-bold text-white transition hover:bg-black"
             >
               <MessageCircle size={17} />
