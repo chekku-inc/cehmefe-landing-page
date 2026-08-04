@@ -28,7 +28,9 @@ import {
   X,
 } from 'lucide-react';
 
-const asset = (path) => `${import.meta.env.BASE_URL}${path}`;
+const BASE = import.meta.env.BASE_URL;
+const asset = (path) => `${BASE}${path}`;
+const withBase = (path) => `${BASE}${path.replace(/^\//, '')}`;
 
 const logo = asset('Logo/cehmefe-logo.png');
 const images = {
@@ -101,7 +103,7 @@ function RotatedServiceCards({ items }) {
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
-    const update = () => setSpacing(mq.matches ? 230 : Math.round(230 * 0.36));
+    const update = () => setSpacing(mq.matches ? 230 : 42);
     update();
     mq.addEventListener('change', update);
     return () => mq.removeEventListener('change', update);
@@ -117,8 +119,8 @@ function RotatedServiceCards({ items }) {
       <motion.div
         ref={ref}
         onClick={() => setActive(null)}
-        className={`relative mx-auto flex w-full max-w-5xl items-center justify-center transition-[height] duration-500 ease-out [--height:330px] [--width:230px] lg:[--height:420px] lg:[--width:300px] ${
-          isAnyActive ? 'h-[680px] lg:h-[790px]' : 'h-[540px]'
+        className={`relative mx-auto flex w-full max-w-5xl items-center justify-center transition-[height] duration-500 ease-out [--height:310px] [--width:185px] lg:[--height:420px] lg:[--width:300px] ${
+          isAnyActive ? 'h-[640px] lg:h-[790px]' : 'h-[420px] lg:h-[540px]'
         }`}
       >
         {items.map((item, index) => {
@@ -137,9 +139,13 @@ function RotatedServiceCards({ items }) {
                   setActive(index);
                 }}
                 animate={{
-                  y: isActive ? 0 : isAnyActive ? dropY : config.y,
+                  y: isActive ? (isLarge ? 0 : -60) : isAnyActive ? dropY : config.y,
                   x: isActive ? 0 : isAnyActive ? offsetX * 0.4 : offsetX,
-                  rotate: isActive ? 0 : isAnyActive ? 0.2 * config.rotate : config.rotate,
+                  rotate: isActive
+                    ? 0
+                    : isAnyActive
+                      ? 0.2 * config.rotate
+                      : config.rotate * (isLarge ? 1 : 0.65),
                   scale: isActive ? 1.12 : isAnyActive ? 0.7 : 1,
                 }}
                 whileHover={{
@@ -155,7 +161,7 @@ function RotatedServiceCards({ items }) {
                 }}
                 className={`absolute top-1/2 left-1/2 flex cursor-pointer flex-col items-start justify-between overflow-hidden rounded-2xl p-3 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.45)] md:p-4 ${theme.card}`}
               >
-                <div className="flex h-40 w-full items-center justify-center rounded-xl bg-white p-3 lg:h-48">
+                <div className="flex h-28 w-full items-center justify-center rounded-xl bg-white p-3 lg:h-48">
                   <img src={item.image} alt="" aria-hidden="true" className="h-full w-full object-contain" loading="lazy" />
                 </div>
                 <div className="mt-4 w-full">
@@ -551,7 +557,10 @@ function App() {
   const [heroTitleIndex, setHeroTitleIndex] = useState(0);
   const t = content[lang];
   const fieldSuffix = lang === 'es' ? 'Es' : 'En';
-  const normalizedPath = window.location.pathname.replace(/\/$/, '') || '/';
+  const basePrefix = BASE.replace(/\/$/, '');
+  const rawPath = window.location.pathname.replace(/\/$/, '') || '/';
+  const normalizedPath =
+    basePrefix && rawPath.startsWith(basePrefix) ? rawPath.slice(basePrefix.length) || '/' : rawPath;
   const currentBlogPost = blogPosts.find((post) => `/blog/${post.fields.slug}` === normalizedPath);
   const isBlogPost = Boolean(currentBlogPost);
   const dateFormatter = new Intl.DateTimeFormat(lang === 'es' ? 'es-HN' : 'en-US', {
@@ -559,7 +568,7 @@ function App() {
     day: 'numeric',
     year: 'numeric',
   });
-  const sectionHref = (href) => (isBlogPost && href.startsWith('#') ? `/${href}` : href);
+  const sectionHref = (href) => (isBlogPost && href.startsWith('#') ? `${BASE}${href}` : href);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
@@ -602,7 +611,7 @@ function App() {
         }`}
       >
         <div className="mx-auto flex h-[88px] max-w-7xl items-center justify-between px-5 md:px-8">
-          <a href={isBlogPost ? '/' : '#inicio'} className="flex items-center" aria-label="CEHMEFE">
+          <a href={isBlogPost ? BASE : '#inicio'} className="flex items-center" aria-label="CEHMEFE">
             <img src={logo} alt="CEHMEFE" className="h-[82px] w-[82px] object-contain" />
           </a>
 
@@ -620,7 +629,7 @@ function App() {
               {lang === 'es' ? 'EN' : 'ES'}
             </button>
             <a
-              href={isBlogPost ? '/#agendar' : '#agendar'}
+              href={isBlogPost ? `${BASE}#agendar` : '#agendar'}
               className="inline-flex items-center gap-2 rounded-md bg-[#272829] px-4 py-3 text-sm font-bold text-white transition hover:bg-black"
             >
               {t.hero.primary}
@@ -664,7 +673,7 @@ function App() {
       {isBlogPost ? (
         <main className="pt-32">
           <article className="mx-auto max-w-4xl px-5 pb-24 pt-10 md:px-8 md:pb-32">
-            <a href="/#blog" className="inline-flex items-center gap-2 text-sm font-bold text-[#5F5F5F] transition hover:text-[#272829]">
+            <a href={`${BASE}#blog`} className="inline-flex items-center gap-2 py-2 text-sm font-bold text-[#5F5F5F] transition hover:text-[#272829]">
               <ChevronRight className="rotate-180" size={16} />
               {lang === 'es' ? 'Volver al blog' : 'Back to blog'}
             </a>
@@ -691,7 +700,7 @@ function App() {
                   ? 'La información del blog es orientativa. La indicación final depende de tu historia clínica y de la evaluación médica.'
                   : 'Blog information is for general guidance. The final indication depends on your clinical history and medical evaluation.'}
               </p>
-              <a href="/#agendar" className="mt-5 inline-flex items-center gap-2 rounded-md bg-[#272829] px-5 py-3 text-sm font-bold text-white transition hover:bg-black">
+              <a href={`${BASE}#agendar`} className="mt-5 inline-flex items-center gap-2 rounded-md bg-[#272829] px-5 py-3 text-sm font-bold text-white transition hover:bg-black">
                 {t.hero.primary}
                 <ChevronRight size={16} />
               </a>
@@ -895,7 +904,7 @@ function App() {
                 const title = post.fields[`title${fieldSuffix}`];
                 const excerpt = post.fields[`excerpt${fieldSuffix}`];
                 const dateText = dateFormatter.format(new Date(`${post.fields.date}T00:00:00`));
-                const postHref = `/blog/${post.fields.slug}/`;
+                const postHref = withBase(`blog/${post.fields.slug}/`);
 
                 return (
                   <article key={post.fields.slug} data-reveal style={{ '--reveal-delay': `${index * 80}ms` }} className="rounded-md border border-[#E2DDDD] bg-[#F8F8F8] p-6">
@@ -981,7 +990,7 @@ function App() {
                     <p className="mt-2 leading-7 text-[#5F5F5F]">{t.appointment.address}</p>
                     <a
                       href="https://www.google.com/maps/search/?api=1&query=Nuevos%20Horizontes%20Business%20Center%20San%20Pedro%20Sula%20Honduras"
-                      className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[#272829] underline underline-offset-4"
+                      className="mt-3 inline-flex items-center gap-2 py-2 text-sm font-bold text-[#272829] underline underline-offset-4"
                     >
                       {t.appointment.directions}
                       <ChevronRight size={15} />
@@ -1000,7 +1009,7 @@ function App() {
                     <h3 className="text-lg font-black text-[#272829]">{lang === 'es' ? 'Correo' : 'Email'}</h3>
                     <div className="mt-2 flex items-start gap-3 text-[#5F5F5F]">
                       <Mail className="mt-1 shrink-0 text-[#272829]" size={18} />
-                      <a href="mailto:info@cehmefe.com" className="leading-7 hover:text-[#272829]">{t.appointment.email}</a>
+                      <a href="mailto:info@cehmefe.com" className="inline-block py-1 leading-7 hover:text-[#272829]">{t.appointment.email}</a>
                     </div>
                   </div>
                 </div>
@@ -1044,18 +1053,18 @@ function App() {
               </p>
               <p className="flex gap-3">
                 <Phone className="mt-1 shrink-0 text-[#272829]" size={18} />
-                <a href="tel:+50431680805" className="hover:text-[#272829]">+504 3168-0805</a>
+                <a href="tel:+50431680805" className="inline-block py-1.5 hover:text-[#272829]">+504 3168-0805</a>
               </p>
               <p className="flex gap-3">
                 <Mail className="mt-1 shrink-0 text-[#272829]" size={18} />
-                <a href="mailto:info@cehmefe.com" className="hover:text-[#272829]">info@cehmefe.com</a>
+                <a href="mailto:info@cehmefe.com" className="inline-block py-1.5 hover:text-[#272829]">info@cehmefe.com</a>
               </p>
             </div>
           </div>
 
           <div data-reveal style={{ '--reveal-delay': '180ms' }}>
             <h2 className="text-xl font-black text-[#272829]">{t.footer.links}</h2>
-            <nav className="mt-6 flex flex-col gap-4 text-sm font-semibold text-[#666]">
+            <nav className="mt-6 flex flex-col gap-1 text-sm font-semibold text-[#666] [&>a]:py-2">
               <a href={sectionHref('#servicios')} className="hover:text-[#272829]">{lang === 'es' ? 'Servicios' : 'Services'}</a>
               <a href={sectionHref('#tecnologia')} className="hover:text-[#272829]">{lang === 'es' ? 'Tecnología' : 'Technology'}</a>
               <a href={sectionHref('#especialista')} className="hover:text-[#272829]">{lang === 'es' ? 'Especialista' : 'Specialist'}</a>
