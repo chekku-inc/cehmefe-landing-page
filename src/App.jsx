@@ -77,120 +77,208 @@ const serviceCardThemes = [
   { card: 'bg-[#F8F8F8] text-[#272829] border border-[#E2DDDD]', desc: 'text-[#5F5F5F]' },
 ];
 
-const serviceCardConfigs = [
+const desktopCardConfigs = [
   { y: -18, rotate: -13, zIndex: 2 },
   { y: 22, rotate: 7, zIndex: 3 },
   { y: -46, rotate: -5, zIndex: 4 },
   { y: 20, rotate: 11, zIndex: 5 },
 ];
 
-const cardSpring = { type: 'spring', visualDuration: 0.6, bounce: 0.25 };
+const cardSpring = { type: 'spring', stiffness: 280, damping: 28, mass: 0.9 };
+
+function ServiceCardContent({ item, theme, showDesc, imageClassName }) {
+  return (
+    <>
+      <div className={`flex w-full shrink-0 items-center justify-center rounded-xl bg-white p-3 ${imageClassName}`}>
+        <img src={item.image} alt="" aria-hidden="true" className="h-full w-full object-contain" loading="lazy" />
+      </div>
+      <div className="mt-3 w-full lg:mt-4">
+        <h3 className="text-left text-lg font-black leading-tight lg:text-2xl">{item.title}</h3>
+        <AnimatePresence initial={false}>
+          {showDesc && (
+            <motion.p
+              key={`${item.title}-desc`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 6 }}
+              transition={{ duration: 0.25 }}
+              className={`mt-2 text-left text-sm leading-6 lg:mt-3 ${theme.desc}`}
+            >
+              {item.desc}
+            </motion.p>
+          )}
+        </AnimatePresence>
+      </div>
+    </>
+  );
+}
 
 function RotatedServiceCards({ items }) {
   const [active, setActive] = useState(null);
-  const [spacing, setSpacing] = useState(230);
+  const [focus, setFocus] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const [isLarge, setIsLarge] = useState(null);
   const ref = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
+      if (!isLarge) return;
       if (ref.current && !ref.current.contains(event.target)) {
         setActive(null);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isLarge]);
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
-    const update = () => setSpacing(mq.matches ? 230 : 42);
-    update();
-    mq.addEventListener('change', update);
-    return () => mq.removeEventListener('change', update);
+    const updateMode = () => setIsLarge(mq.matches);
+    updateMode();
+    mq.addEventListener('change', updateMode);
+    return () => mq.removeEventListener('change', updateMode);
   }, []);
 
   const middle = (items.length - 1) / 2;
   const isAnyActive = active !== null;
-  const isLarge = spacing === 230;
-  const dropY = isLarge ? 420 : 330;
+  const desktopSpacing = 230;
+  const ready = isLarge !== null;
+  const focusedItem = items[focus];
+  const focusedTheme = serviceCardThemes[focus % serviceCardThemes.length];
+
+  const goTo = (nextIndex) => {
+    const clamped = (nextIndex + items.length) % items.length;
+    setDirection(clamped > focus || (focus === items.length - 1 && clamped === 0) ? 1 : -1);
+    setFocus(clamped);
+  };
+
+  const cycleFocus = (dir) => {
+    setDirection(dir);
+    setFocus((current) => (current + dir + items.length) % items.length);
+  };
+
+  if (!ready) {
+    return <div className="h-[480px] w-full lg:h-[620px]" aria-hidden="true" />;
+  }
+
+  // Mobile: one full card, finger-swipeable with spring motion
+  if (!isLarge) {
+    return (
+      <div className="relative flex w-full flex-col items-center justify-center">
+        <div className="relative mx-auto flex h-[430px] w-full max-w-sm touch-pan-y items-center justify-center overflow-hidden px-2">
+          <motion.article
+            key={focus}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.85}
+            onDragEnd={(_, info) => {
+              const swipe = info.offset.x;
+              const velocity = info.velocity.x;
+              if (swipe < -56 || velocity < -400) cycleFocus(1);
+              else if (swipe > 56 || velocity > 400) cycleFocus(-1);
+            }}
+            initial={{ opacity: 0, x: direction * 48, rotate: direction * 4, scale: 0.96 }}
+            animate={{ opacity: 1, x: 0, rotate: -2, scale: 1 }}
+            transition={cardSpring}
+            className={`flex h-[400px] w-[min(100%,300px)] cursor-grab flex-col items-start overflow-hidden rounded-2xl p-5 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.45)] active:cursor-grabbing ${focusedTheme.card}`}
+            style={{ touchAction: 'pan-y' }}
+          >
+            <ServiceCardContent
+              item={focusedItem}
+              theme={focusedTheme}
+              showDesc
+              imageClassName="h-36 pointer-events-none"
+            />
+          </motion.article>
+        </div>
+
+        <div className="mt-3 flex items-center justify-center gap-4">
+          <button
+            type="button"
+            aria-label="Anterior"
+            onClick={() => cycleFocus(-1)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#E2DDDD] bg-white text-[#272829]"
+          >
+            <ChevronRight className="rotate-180" size={18} />
+          </button>
+          <div className="flex items-center justify-center gap-2">
+            {items.map((item, index) => (
+              <button
+                key={`${item.title}-dot`}
+                type="button"
+                aria-label={item.title}
+                onClick={() => goTo(index)}
+                className={`h-2.5 rounded-full transition-all duration-300 ${
+                  focus === index ? 'w-7 bg-[#272829]' : 'w-2.5 bg-[#C9C8C9]'
+                }`}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            aria-label="Siguiente"
+            onClick={() => cycleFocus(1)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#E2DDDD] bg-white text-[#272829]"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
-      <motion.div
+    <div className="relative flex w-full flex-col items-center justify-center overflow-visible py-6">
+      <div
         ref={ref}
         onClick={() => setActive(null)}
-        className={`relative mx-auto flex w-full max-w-5xl items-center justify-center transition-[height] duration-500 ease-out [--height:310px] [--width:185px] lg:[--height:420px] lg:[--width:300px] ${
-          isAnyActive ? 'h-[640px] lg:h-[790px]' : 'h-[420px] lg:h-[540px]'
+        className={`relative mx-auto flex w-full max-w-6xl items-center justify-center overflow-visible transition-[height] duration-500 ease-out ${
+          isAnyActive ? 'h-[820px]' : 'h-[580px]'
         }`}
       >
         {items.map((item, index) => {
-          const offsetX = (index - middle) * spacing;
-          const config = serviceCardConfigs[index % serviceCardConfigs.length];
+          const config = desktopCardConfigs[index % desktopCardConfigs.length];
           const theme = serviceCardThemes[index % serviceCardThemes.length];
           const isActive = active === index;
+          const desktopOffsetX = (index - middle) * desktopSpacing;
 
           return (
-            <motion.div key={item.title}>
-              <motion.button
-                type="button"
-                initial={{ x: 0, scale: 0 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActive(index);
-                }}
-                animate={{
-                  y: isActive ? (isLarge ? 0 : -60) : isAnyActive ? dropY : config.y,
-                  x: isActive ? 0 : isAnyActive ? offsetX * 0.4 : offsetX,
-                  rotate: isActive
-                    ? 0
-                    : isAnyActive
-                      ? 0.2 * config.rotate
-                      : config.rotate * (isLarge ? 1 : 0.65),
-                  scale: isActive ? 1.12 : isAnyActive ? 0.7 : 1,
-                }}
-                whileHover={{
-                  scale: isActive ? 1.12 : isAnyActive ? 0.7 : 1.05,
-                }}
-                transition={cardSpring}
-                style={{
-                  width: 'var(--width)',
-                  height: 'var(--height)',
-                  marginLeft: 'calc(var(--width) / -2)',
-                  marginTop: 'calc(var(--height) / -2)',
-                  zIndex: isActive ? 50 : config.zIndex,
-                }}
-                className={`absolute top-1/2 left-1/2 flex cursor-pointer flex-col items-start justify-between overflow-hidden rounded-2xl p-3 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.45)] md:p-4 ${theme.card}`}
-              >
-                <div className="flex h-28 w-full items-center justify-center rounded-xl bg-white p-3 lg:h-48">
-                  <img src={item.image} alt="" aria-hidden="true" className="h-full w-full object-contain" loading="lazy" />
-                </div>
-                <div className="mt-4 w-full">
-                  <motion.h3
-                    layoutId={`${item.title}-title`}
-                    className="text-left text-lg font-black leading-tight lg:text-2xl"
-                  >
-                    {item.title}
-                  </motion.h3>
-                  <AnimatePresence mode="popLayout">
-                    {isActive && (
-                      <motion.p
-                        layoutId={`${item.title}-description`}
-                        initial={{ opacity: 0, x: 20, y: 20, height: 0 }}
-                        animate={{ opacity: 1, x: 0, y: 0, height: 'auto' }}
-                        exit={{ opacity: 0, x: 40, y: 40 }}
-                        transition={cardSpring}
-                        className={`mt-3 text-left text-xs leading-5 lg:text-sm lg:leading-6 ${theme.desc}`}
-                      >
-                        {item.desc}
-                      </motion.p>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </motion.button>
-            </motion.div>
+            <motion.button
+              key={item.title}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setActive(index);
+              }}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{
+                y: isActive ? 0 : isAnyActive ? 420 : config.y,
+                x: isActive ? 0 : isAnyActive ? desktopOffsetX * 0.4 : desktopOffsetX,
+                rotate: isActive ? 0 : isAnyActive ? 0.2 * config.rotate : config.rotate,
+                scale: isActive ? 1.12 : isAnyActive ? 0.7 : 1,
+                opacity: 1,
+              }}
+              whileHover={{ scale: isActive ? 1.12 : isAnyActive ? 0.7 : 1.05 }}
+              transition={cardSpring}
+              style={{
+                width: 300,
+                height: 420,
+                marginLeft: -150,
+                marginTop: -210,
+                zIndex: isActive ? 50 : config.zIndex,
+              }}
+              className={`absolute top-1/2 left-1/2 flex cursor-pointer flex-col items-start overflow-hidden rounded-2xl p-4 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.45)] ${theme.card}`}
+            >
+              <ServiceCardContent
+                item={item}
+                theme={theme}
+                showDesc={isActive}
+                imageClassName="h-48"
+              />
+            </motion.button>
           );
         })}
-      </motion.div>
+      </div>
     </div>
   );
 }
@@ -775,8 +863,11 @@ function App() {
               <p className="mt-5 text-lg leading-8 text-[#5F5F5F]">{t.services.subtitle}</p>
             </div>
 
-            <div data-reveal className="mt-6">
-              <p className="text-center text-xs font-bold uppercase tracking-[0.18em] text-[#A1A0A1]">
+            <div className="mt-6">
+              <p className="text-center text-xs font-bold uppercase tracking-[0.18em] text-[#A1A0A1] lg:hidden">
+                {lang === 'es' ? 'Desliza para explorar cada estudio' : 'Swipe to explore each study'}
+              </p>
+              <p className="hidden text-center text-xs font-bold uppercase tracking-[0.18em] text-[#A1A0A1] lg:block">
                 {lang === 'es' ? 'Toca una tarjeta para ver el detalle' : 'Tap a card to see details'}
               </p>
               <RotatedServiceCards
