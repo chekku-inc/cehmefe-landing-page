@@ -109,13 +109,17 @@ function RotatedServiceCards({ items }) {
 
   const middle = (items.length - 1) / 2;
   const isAnyActive = active !== null;
+  const isLarge = spacing === 230;
+  const dropY = isLarge ? 420 : 330;
 
   return (
     <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
       <motion.div
         ref={ref}
         onClick={() => setActive(null)}
-        className="relative mx-auto flex h-[540px] w-full max-w-5xl items-center justify-center [--height:330px] [--width:230px] lg:[--height:420px] lg:[--width:300px]"
+        className={`relative mx-auto flex w-full max-w-5xl items-center justify-center transition-[height] duration-500 ease-out [--height:330px] [--width:230px] lg:[--height:420px] lg:[--width:300px] ${
+          isAnyActive ? 'h-[680px] lg:h-[790px]' : 'h-[540px]'
+        }`}
       >
         {items.map((item, index) => {
           const offsetX = (index - middle) * spacing;
@@ -133,7 +137,7 @@ function RotatedServiceCards({ items }) {
                   setActive(index);
                 }}
                 animate={{
-                  y: isActive ? 0 : isAnyActive ? 420 : config.y,
+                  y: isActive ? 0 : isAnyActive ? dropY : config.y,
                   x: isActive ? 0 : isAnyActive ? offsetX * 0.4 : offsetX,
                   rotate: isActive ? 0 : isAnyActive ? 0.2 * config.rotate : config.rotate,
                   scale: isActive ? 1.12 : isAnyActive ? 0.7 : 1,
