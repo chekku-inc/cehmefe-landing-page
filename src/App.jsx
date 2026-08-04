@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { TextMorph } from 'torph/react';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from 'motion/react';
 import heraTechnologyPost from './content/blog/hera-z20-tecnologia.md?raw';
 import modelsAccessibilityPost from './content/blog/modelos-3d-accesibilidad.md?raw';
 import ultrasoundWeekPost from './content/blog/ultrasonido-segun-semana.md?raw';
@@ -158,7 +158,7 @@ function RotatedServiceCards({ items }) {
   };
 
   if (!ready) {
-    return <div className="h-[480px] w-full lg:h-[620px]" aria-hidden="true" />;
+    return <div className="h-[480px] w-full lg:h-[600px]" aria-hidden="true" />;
   }
 
   // Mobile: one full card, finger-swipeable with spring motion
@@ -228,12 +228,12 @@ function RotatedServiceCards({ items }) {
   }
 
   return (
-    <div className="relative flex w-full flex-col items-center justify-center overflow-visible py-6">
+    <div className="relative z-0 isolate flex w-full flex-col items-center justify-center py-4">
       <div
         ref={ref}
         onClick={() => setActive(null)}
-        className={`relative mx-auto flex w-full max-w-6xl items-center justify-center overflow-visible transition-[height] duration-500 ease-out ${
-          isAnyActive ? 'h-[820px]' : 'h-[580px]'
+        className={`relative mx-auto flex w-full max-w-6xl items-center justify-center overflow-hidden transition-[height] duration-500 ease-out ${
+          isAnyActive ? 'h-[840px]' : 'h-[600px]'
         }`}
       >
         {items.map((item, index) => {
@@ -241,6 +241,8 @@ function RotatedServiceCards({ items }) {
           const theme = serviceCardThemes[index % serviceCardThemes.length];
           const isActive = active === index;
           const desktopOffsetX = (index - middle) * desktopSpacing;
+          // When expanded: featured card above, others as a compact fan below with a small gap
+          const stackOffsetX = (index - middle) * 95;
 
           return (
             <motion.button
@@ -252,20 +254,21 @@ function RotatedServiceCards({ items }) {
               }}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{
-                y: isActive ? 0 : isAnyActive ? 420 : config.y,
-                x: isActive ? 0 : isAnyActive ? desktopOffsetX * 0.4 : desktopOffsetX,
-                rotate: isActive ? 0 : isAnyActive ? 0.2 * config.rotate : config.rotate,
-                scale: isActive ? 1.12 : isAnyActive ? 0.7 : 1,
+                y: isActive ? -155 : isAnyActive ? 245 : config.y,
+                x: isActive ? 0 : isAnyActive ? stackOffsetX : desktopOffsetX,
+                rotate: isActive ? 0 : isAnyActive ? 0.15 * config.rotate : config.rotate,
+                scale: isActive ? 1.05 : isAnyActive ? 0.68 : 1,
                 opacity: 1,
               }}
-              whileHover={{ scale: isActive ? 1.12 : isAnyActive ? 0.7 : 1.05 }}
+              whileHover={{ scale: isActive ? 1.05 : isAnyActive ? 0.68 : 1.05 }}
               transition={cardSpring}
               style={{
                 width: 300,
                 height: 420,
                 marginLeft: -150,
                 marginTop: -210,
-                zIndex: isActive ? 50 : config.zIndex,
+                // Keep below fixed header (z-50)
+                zIndex: isActive ? 20 : config.zIndex,
               }}
               className={`absolute top-1/2 left-1/2 flex cursor-pointer flex-col items-start overflow-hidden rounded-2xl p-4 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.45)] ${theme.card}`}
             >
@@ -280,6 +283,70 @@ function RotatedServiceCards({ items }) {
         })}
       </div>
     </div>
+  );
+}
+
+function HeroSection({ t, lang, heroTitleIndex }) {
+  const heroRef = useRef(null);
+  const reduceMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start'],
+  });
+
+  const imageY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [0, 140]);
+  const imageScale = useTransform(scrollYProgress, [0, 1], reduceMotion ? [1.1, 1.1] : [1.1, 1.2]);
+  const contentY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [0, 70]);
+
+  return (
+    <section ref={heroRef} className="relative flex min-h-[92vh] items-end overflow-hidden">
+      <motion.div style={{ y: imageY, scale: imageScale }} className="absolute inset-0 will-change-transform">
+        <img
+          src={images.hero}
+          alt="Dra. Mónica García junto a equipo de ultrasonido"
+          className="h-full w-full object-cover"
+        />
+      </motion.div>
+      <div className="absolute inset-0 bg-gradient-to-t from-[#272829]/90 via-[#272829]/45 to-[#272829]/25" />
+
+      <motion.div
+        style={{ y: contentY }}
+        className="relative z-10 mx-auto w-full max-w-7xl px-5 pb-16 pt-40 will-change-transform md:px-8 md:pb-24"
+      >
+        <div className="max-w-3xl">
+          <h1 className="text-5xl font-black leading-[0.98] tracking-normal text-white md:text-7xl">
+            {t.hero.titleLead}
+            <TextMorph
+              as="span"
+              duration={720}
+              ease="cubic-bezier(0.22, 1, 0.36, 1)"
+              className="hero-morph-title mt-2 block min-h-[2em] max-w-full font-serif italic md:min-h-[1em]"
+            >
+              {t.hero.titleMorphs[heroTitleIndex]}
+            </TextMorph>
+          </h1>
+          <p className="mt-7 max-w-xl text-lg leading-8 text-white/85">{t.hero.subtitle}</p>
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <a
+              href="#agendar"
+              className="inline-flex items-center justify-center gap-2 rounded-md bg-white px-6 py-4 text-sm font-bold text-[#272829] transition hover:bg-[#F6F1F1]"
+            >
+              {t.hero.primary}
+              <CalendarCheck size={18} />
+            </a>
+            <a
+              href="#servicios"
+              className="inline-flex items-center justify-center rounded-md border border-white/60 px-6 py-4 text-sm font-bold text-white transition hover:border-white hover:bg-white/10"
+            >
+              {t.hero.secondary}
+            </a>
+          </div>
+          <p className="mt-10 max-w-md border-l-2 border-white/50 pl-4 text-xl font-black leading-tight text-white md:text-2xl">
+            {lang === 'es' ? 'Claridad médica para una etapa sensible.' : 'Medical clarity for a sensitive stage.'}
+          </p>
+        </div>
+      </motion.div>
+    </section>
   );
 }
 
@@ -797,49 +864,7 @@ function App() {
         </main>
       ) : (
         <main id="inicio">
-        <section className="relative flex min-h-[92vh] items-end overflow-hidden">
-          <img
-            src={images.hero}
-            alt="Dra. Mónica García junto a equipo de ultrasonido"
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#272829]/90 via-[#272829]/45 to-[#272829]/25" />
-
-          <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pb-16 pt-40 md:px-8 md:pb-24">
-            <div className="max-w-3xl">
-              <h1 data-reveal style={{ '--reveal-delay': '40ms' }} className="text-5xl font-black leading-[0.98] tracking-normal text-white md:text-7xl">
-                {t.hero.titleLead}
-                <TextMorph
-                  as="span"
-                  duration={720}
-                  ease="cubic-bezier(0.22, 1, 0.36, 1)"
-                  className="hero-morph-title mt-2 block min-h-[2em] max-w-full font-serif italic md:min-h-[1em]"
-                >
-                  {t.hero.titleMorphs[heroTitleIndex]}
-                </TextMorph>
-              </h1>
-              <p data-reveal style={{ '--reveal-delay': '90ms' }} className="mt-7 max-w-xl text-lg leading-8 text-white/85">{t.hero.subtitle}</p>
-              <div data-reveal style={{ '--reveal-delay': '170ms' }} className="mt-9 flex flex-col gap-3 sm:flex-row">
-                <a
-                  href="#agendar"
-                  className="inline-flex items-center justify-center gap-2 rounded-md bg-white px-6 py-4 text-sm font-bold text-[#272829] transition hover:bg-[#F6F1F1]"
-                >
-                  {t.hero.primary}
-                  <CalendarCheck size={18} />
-                </a>
-                <a
-                  href="#servicios"
-                  className="inline-flex items-center justify-center rounded-md border border-white/60 px-6 py-4 text-sm font-bold text-white transition hover:border-white hover:bg-white/10"
-                >
-                  {t.hero.secondary}
-                </a>
-              </div>
-              <p data-reveal style={{ '--reveal-delay': '240ms' }} className="mt-10 max-w-md border-l-2 border-white/50 pl-4 text-xl font-black leading-tight text-white md:text-2xl">
-                {lang === 'es' ? 'Claridad médica para una etapa sensible.' : 'Medical clarity for a sensitive stage.'}
-              </p>
-            </div>
-          </div>
-        </section>
+        <HeroSection t={t} lang={lang} heroTitleIndex={heroTitleIndex} />
 
         <section className="border-y border-[#E5E0E0] bg-white">
           <div className="mx-auto grid max-w-7xl gap-px bg-[#E5E0E0] px-0 md:grid-cols-3">
@@ -856,7 +881,7 @@ function App() {
           </div>
         </section>
 
-        <section id="servicios" className="bg-[#F8F8F8] py-24 md:py-32">
+        <section id="servicios" className="relative z-0 isolate overflow-x-clip bg-[#F8F8F8] py-24 md:py-32">
           <div className="mx-auto max-w-7xl px-5 md:px-8">
             <div data-reveal className="max-w-3xl">
               <h2 className="text-4xl font-black leading-tight md:text-6xl">{t.services.title}</h2>
