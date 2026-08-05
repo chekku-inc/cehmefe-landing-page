@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { TextMorph } from 'torph/react';
 import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from 'motion/react';
-import heraTechnologyPost from './content/blog/hera-z20-tecnologia.md?raw';
-import modelsAccessibilityPost from './content/blog/modelos-3d-accesibilidad.md?raw';
-import ultrasoundWeekPost from './content/blog/ultrasonido-segun-semana.md?raw';
+import { blogPosts } from './blog/posts';
+import { mdxComponents } from './blog/mdxComponents';
 import {
   Award,
   Baby,
@@ -350,36 +349,6 @@ function HeroSection({ t, lang, heroTitleIndex }) {
   );
 }
 
-function parseBlogPost(markdown) {
-  const match = markdown.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
-  const fields = {};
-
-  if (!match) {
-    return { fields, body: markdown.trim() };
-  }
-
-  match[1].split('\n').forEach((line) => {
-    const separatorIndex = line.indexOf(':');
-    if (separatorIndex === -1) return;
-    const key = line.slice(0, separatorIndex).trim();
-    const value = line.slice(separatorIndex + 1).trim();
-    fields[key] = value;
-  });
-
-  return {
-    fields,
-    body: match[2].trim(),
-  };
-}
-
-const blogPosts = [
-  ultrasoundWeekPost,
-  heraTechnologyPost,
-  modelsAccessibilityPost,
-]
-  .map(parseBlogPost)
-  .sort((a, b) => new Date(b.fields.date) - new Date(a.fields.date));
-
 const content = {
   es: {
     nav: [
@@ -509,7 +478,7 @@ const content = {
     },
     specialist: {
       name: 'Dra. Mónica García',
-      role: 'Especialista en Medicina Materno Fetal',
+      role: 'Especialista en Medicina Fetal',
       body:
         'La atención combina experiencia clínica, evaluación cuidadosa y comunicación cercana. Cada estudio se explica con lenguaje claro para que las familias comprendan los hallazgos y puedan tomar decisiones con tranquilidad.',
       credentialsLabel: 'Especialidades y experiencia',
@@ -670,7 +639,7 @@ const content = {
     },
     specialist: {
       name: 'Dr. Monica Garcia',
-      role: 'Maternal-Fetal Medicine Specialist',
+      role: 'Fetal Medicine Specialist',
       body:
         'Care combines clinical experience, careful evaluation, and close communication. Every study is explained in clear language so families understand the findings and can make decisions calmly.',
       credentialsLabel: 'Specialties and experience',
@@ -716,8 +685,9 @@ function App() {
   const rawPath = window.location.pathname.replace(/\/$/, '') || '/';
   const normalizedPath =
     basePrefix && rawPath.startsWith(basePrefix) ? rawPath.slice(basePrefix.length) || '/' : rawPath;
-  const currentBlogPost = blogPosts.find((post) => `/blog/${post.fields.slug}` === normalizedPath);
+  const currentBlogPost = blogPosts.find((post) => `/blog/${post.slug}` === normalizedPath);
   const isBlogPost = Boolean(currentBlogPost);
+  const BlogContent = currentBlogPost?.Component;
   const dateFormatter = new Intl.DateTimeFormat(lang === 'es' ? 'es-HN' : 'en-US', {
     month: 'long',
     day: 'numeric',
@@ -832,19 +802,24 @@ function App() {
               <ChevronRight className="rotate-180" size={16} />
               {lang === 'es' ? 'Volver al blog' : 'Back to blog'}
             </a>
-            <h1 className="mt-10 text-5xl font-black leading-tight text-[#272829] md:text-7xl">
+            <p className="mt-10 text-sm font-bold uppercase tracking-[0.18em] text-[#6A8390]">
+              {currentBlogPost.fields[`category${fieldSuffix}`]}
+            </p>
+            <h1 className="mt-4 text-5xl font-black leading-tight text-[#272829] md:text-7xl">
               {currentBlogPost.fields[`title${fieldSuffix}`]}
             </h1>
-            <time className="mt-6 block text-base font-semibold text-[#6A8390]" dateTime={currentBlogPost.fields.date}>
-              {dateFormatter.format(new Date(`${currentBlogPost.fields.date}T00:00:00`))}
-            </time>
+            <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-base font-semibold text-[#6A8390]">
+              <time dateTime={currentBlogPost.fields.date}>
+                {dateFormatter.format(new Date(`${currentBlogPost.fields.date}T00:00:00`))}
+              </time>
+              <span aria-hidden="true">·</span>
+              <span>{currentBlogPost.fields[`readTime${fieldSuffix}`]}</span>
+            </div>
             <p className="mt-8 text-xl leading-9 text-[#5F5F5F]">
               {currentBlogPost.fields[`excerpt${fieldSuffix}`]}
             </p>
-            <div className="mt-12 space-y-7 border-t border-[#E2DDDD] pt-10 text-lg leading-9 text-[#3F4142]">
-              {currentBlogPost.body.split(/\n\s*\n/).filter(Boolean).map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
-              ))}
+            <div className="mt-12 border-t border-[#E2DDDD] pt-4">
+              {BlogContent ? <BlogContent components={mdxComponents} /> : null}
             </div>
             <div className="mt-12 rounded-md border border-[#DDE8EC] bg-[#F4FAFC] p-6">
               <h2 className="text-2xl font-black leading-tight">
@@ -1020,11 +995,14 @@ function App() {
                 const title = post.fields[`title${fieldSuffix}`];
                 const excerpt = post.fields[`excerpt${fieldSuffix}`];
                 const dateText = dateFormatter.format(new Date(`${post.fields.date}T00:00:00`));
-                const postHref = withBase(`blog/${post.fields.slug}/`);
+                const postHref = withBase(`blog/${post.slug}/`);
 
                 return (
-                  <article key={post.fields.slug} data-reveal style={{ '--reveal-delay': `${index * 80}ms` }} className="rounded-md border border-[#E2DDDD] bg-[#F8F8F8] p-6">
-                    <h3 className="text-2xl font-black leading-tight">{title}</h3>
+                  <article key={post.slug} data-reveal style={{ '--reveal-delay': `${index * 80}ms` }} className="rounded-md border border-[#E2DDDD] bg-[#F8F8F8] p-6">
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#6A8390]">
+                      {post.fields[`category${fieldSuffix}`]}
+                    </p>
+                    <h3 className="mt-3 text-2xl font-black leading-tight">{title}</h3>
                     <time className="mt-4 block text-sm font-semibold text-[#6A8390]" dateTime={post.fields.date}>{dateText}</time>
                     <p className="mt-4 text-sm leading-7 text-[#656565]">{excerpt}</p>
 
