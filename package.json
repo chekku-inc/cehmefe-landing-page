@@ -17,6 +17,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.1",
     "@tailwindcss/vite": "^4.2.1",
+    "@types/react": "^19.2.18",
     "@vitejs/plugin-react-swc": "^4.2.3",
     "autoprefixer": "^10.4.27",
     "gh-pages": "^6.3.0",
