@@ -1164,9 +1164,14 @@ function App() {
               <a href={sectionHref('#especialista')} className="hover:text-[#272829]">{lang === 'es' ? 'Especialista' : 'Specialist'}</a>
               <a href={sectionHref('#blog')} className="hover:text-[#272829]">Blog</a>
               <a href={sectionHref('#agendar')} className="hover:text-[#272829]">{lang === 'es' ? 'Agendar cita' : 'Book appointment'}</a>
-              <a className="inline-flex items-center gap-2 hover:text-[#272829]" href="https://www.instagram.com/cehmefe_fetalmed">
+              <a
+                className="inline-flex items-center gap-2 hover:text-[#272829]"
+                href="https://www.instagram.com/cehmefe"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Instagram size={17} />
-                @cehmefe_fetalmed
+                @cehmefe
               </a>
             </nav>
           </div>
