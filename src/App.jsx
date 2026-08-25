@@ -818,6 +818,15 @@ function App() {
             <p className="mt-8 text-xl leading-9 text-[#5F5F5F]">
               {currentBlogPost.fields[`excerpt${fieldSuffix}`]}
             </p>
+            {currentBlogPost.fields.cover ? (
+              <figure className="mt-10 overflow-hidden rounded-md border border-[#E2DDDD] bg-[#F1F1F1]">
+                <img
+                  src={asset(currentBlogPost.fields.cover)}
+                  alt={currentBlogPost.fields[`coverAlt${fieldSuffix}`] || currentBlogPost.fields[`title${fieldSuffix}`]}
+                  className="aspect-[16/9] h-auto w-full object-cover"
+                />
+              </figure>
+            ) : null}
             <div className="mt-12 border-t border-[#E2DDDD] pt-4">
               {BlogContent ? <BlogContent components={mdxComponents} /> : null}
             </div>
@@ -994,22 +1003,35 @@ function App() {
               {blogPosts.map((post, index) => {
                 const title = post.fields[`title${fieldSuffix}`];
                 const excerpt = post.fields[`excerpt${fieldSuffix}`];
+                const coverAlt = post.fields[`coverAlt${fieldSuffix}`] || title;
                 const dateText = dateFormatter.format(new Date(`${post.fields.date}T00:00:00`));
                 const postHref = withBase(`blog/${post.slug}/`);
 
                 return (
-                  <article key={post.slug} data-reveal style={{ '--reveal-delay': `${index * 80}ms` }} className="rounded-md border border-[#E2DDDD] bg-[#F8F8F8] p-6">
-                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#6A8390]">
-                      {post.fields[`category${fieldSuffix}`]}
-                    </p>
-                    <h3 className="mt-3 text-2xl font-black leading-tight">{title}</h3>
-                    <time className="mt-4 block text-sm font-semibold text-[#6A8390]" dateTime={post.fields.date}>{dateText}</time>
-                    <p className="mt-4 text-sm leading-7 text-[#656565]">{excerpt}</p>
+                  <article key={post.slug} data-reveal style={{ '--reveal-delay': `${index * 80}ms` }} className="overflow-hidden rounded-md border border-[#E2DDDD] bg-[#F8F8F8]">
+                    {post.fields.cover ? (
+                      <a href={postHref} className="block overflow-hidden border-b border-[#E2DDDD] bg-[#F1F1F1]">
+                        <img
+                          src={asset(post.fields.cover)}
+                          alt={coverAlt}
+                          className="aspect-[16/10] h-auto w-full object-cover transition duration-500 hover:scale-[1.03]"
+                          loading="lazy"
+                        />
+                      </a>
+                    ) : null}
+                    <div className="p-6">
+                      <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#6A8390]">
+                        {post.fields[`category${fieldSuffix}`]}
+                      </p>
+                      <h3 className="mt-3 text-2xl font-black leading-tight">{title}</h3>
+                      <time className="mt-4 block text-sm font-semibold text-[#6A8390]" dateTime={post.fields.date}>{dateText}</time>
+                      <p className="mt-4 text-sm leading-7 text-[#656565]">{excerpt}</p>
 
-                    <a href={postHref} className="mt-5 inline-flex items-center gap-2 rounded-md border border-[#CFCACA] px-4 py-3 text-sm font-bold text-[#272829] transition hover:border-[#272829] hover:bg-white">
-                      {t.blog.readMore}
-                      <ChevronRight size={16} />
-                    </a>
+                      <a href={postHref} className="mt-5 inline-flex items-center gap-2 rounded-md border border-[#CFCACA] px-4 py-3 text-sm font-bold text-[#272829] transition hover:border-[#272829] hover:bg-white">
+                        {t.blog.readMore}
+                        <ChevronRight size={16} />
+                      </a>
+                    </div>
                   </article>
                 );
               })}
