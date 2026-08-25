@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { TextMorph } from 'torph/react';
 import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from 'motion/react';
-import { blogPosts } from './blog/posts';
+import { blogPosts, getFeaturedBlogPosts } from './blog/posts';
 import { mdxComponents } from './blog/mdxComponents';
+import { BlogAuthorByline, BlogIndexPage, BlogPostCard } from './blog/BlogUi';
 import {
   Award,
   Baby,
@@ -366,14 +367,14 @@ const content = {
         'atención humana.',
       ],
       subtitle:
-        'Te acompañamos durante el embarazo con estudios especializados de tu bebé, explicando cada resultado con claridad y cuidado para que vivas esta etapa con más tranquilidad y confianza.',
+        'Centro de medicina fetal en San Pedro Sula, Honduras. Te acompañamos durante el embarazo con estudios especializados de tu bebé, explicando cada resultado con claridad y cuidado.',
       primary: 'Agendar cita',
       secondary: 'Ver servicios',
     },
     trust: [
       { icon: ShieldCheck, value: 'Médicos certificados', label: 'Atención especializada en medicina fetal' },
       { icon: Award, value: 'Experiencia clínica', label: 'Acompañamiento claro y humano' },
-      { icon: MapPin, value: 'SPS, Honduras', label: 'Nuevos Horizontes Business Center' },
+      { icon: MapPin, value: 'San Pedro Sula, Honduras', label: 'Nuevos Horizontes Business Center' },
     ],
     services: {
       title: 'Estudios especializados para cada etapa del embarazo.',
@@ -474,7 +475,22 @@ const content = {
       subtitle:
         'Artículos breves basados en las dudas más frecuentes sobre estudios prenatales, tecnología y seguimiento fetal.',
       label: 'Blog',
-      readMore: 'Ir al blog',
+      readMore: 'Leer artículo',
+      viewAll: 'Ver todos los artículos',
+      indexTitle: 'Lecturas para acompañar tu embarazo.',
+      indexSubtitle: 'Guías claras sobre estudios prenatales, tecnología y seguimiento fetal, escritas para acompañar cada etapa del embarazo.',
+      backHome: 'Volver al inicio',
+      writtenBy: 'Escrito por',
+      allArticles: 'Todos los artículos',
+      allArticlesSubtitle: 'Explora por categoría o busca un tema específico.',
+      allCategories: 'Todos',
+      searchLabel: 'Buscar artículos',
+      searchPlaceholder: 'Buscar artículos…',
+      resultSingular: 'resultado',
+      resultPlural: 'resultados',
+      emptyTitle: 'No encontramos artículos con ese filtro.',
+      emptyBody: 'Prueba con otra categoría o limpia la búsqueda para ver todo el blog.',
+      clearFilters: 'Limpiar filtros',
     },
     specialist: {
       name: 'Dra. Mónica García',
@@ -505,10 +521,10 @@ const content = {
       directions: 'Abrir en Google Maps',
     },
     footer: {
-      description: 'Centro Hondureño de Medicina Fetal. Estudios especializados, tecnología avanzada y acompañamiento médico claro y humano.',
+      description: 'CEHMEFE es el Centro Hondureño de Medicina Fetal en San Pedro Sula. Estudios prenatales especializados, tecnología avanzada y acompañamiento médico claro y humano.',
       contact: 'Contacto',
       links: 'Enlaces',
-      rights: '© 2026 CEHMEFE. Centro Hondureño de Medicina Fetal.',
+      rights: '© 2026 CEHMEFE. Centro Hondureño de Medicina Fetal. San Pedro Sula, Honduras.',
     },
   },
   en: {
@@ -527,14 +543,14 @@ const content = {
         'human attention.',
       ],
       subtitle:
-        'We accompany you through pregnancy with specialized studies of your baby, explaining each result with clarity and care so this stage feels calmer and more confident.',
+        'Fetal medicine center in San Pedro Sula, Honduras. We accompany you through pregnancy with specialized studies of your baby, explaining each result with clarity and care.',
       primary: 'Book appointment',
       secondary: 'View services',
     },
     trust: [
       { icon: ShieldCheck, value: 'Certified care', label: 'Specialized fetal medicine support' },
       { icon: Award, value: 'Clinical experience', label: 'Clear and human accompaniment' },
-      { icon: MapPin, value: 'SPS, Honduras', label: 'Nuevos Horizontes Business Center' },
+      { icon: MapPin, value: 'San Pedro Sula, Honduras', label: 'Nuevos Horizontes Business Center' },
     ],
     services: {
       title: 'Specialized studies for every stage of pregnancy.',
@@ -635,7 +651,22 @@ const content = {
       subtitle:
         'Short articles based on common questions about prenatal studies, technology, and fetal follow-up.',
       label: 'Blog',
-      readMore: 'Go to blog',
+      readMore: 'Read article',
+      viewAll: 'View all articles',
+      indexTitle: 'Reading to support your pregnancy.',
+      indexSubtitle: 'Clear guides on prenatal studies, technology, and fetal follow-up, written to support every stage of pregnancy.',
+      backHome: 'Back to home',
+      writtenBy: 'Written by',
+      allArticles: 'All articles',
+      allArticlesSubtitle: 'Browse by category or search for a specific topic.',
+      allCategories: 'All',
+      searchLabel: 'Search articles',
+      searchPlaceholder: 'Search articles…',
+      resultSingular: 'result',
+      resultPlural: 'results',
+      emptyTitle: 'No articles match that filter.',
+      emptyBody: 'Try another category or clear the search to see the full blog.',
+      clearFilters: 'Clear filters',
     },
     specialist: {
       name: 'Dr. Monica Garcia',
@@ -666,10 +697,10 @@ const content = {
       directions: 'Open in Google Maps',
     },
     footer: {
-      description: 'Honduran Center for Fetal Medicine. Specialized studies, advanced technology, and clear, human medical accompaniment.',
+      description: 'CEHMEFE is the Honduran Center for Fetal Medicine in San Pedro Sula. Specialized prenatal studies, advanced technology, and clear, human medical accompaniment.',
       contact: 'Contact',
       links: 'Links',
-      rights: '© 2026 CEHMEFE. Honduran Center for Fetal Medicine.',
+      rights: '© 2026 CEHMEFE. Honduran Center for Fetal Medicine. San Pedro Sula, Honduras.',
     },
   },
 };
@@ -687,13 +718,17 @@ function App() {
     basePrefix && rawPath.startsWith(basePrefix) ? rawPath.slice(basePrefix.length) || '/' : rawPath;
   const currentBlogPost = blogPosts.find((post) => `/blog/${post.slug}` === normalizedPath);
   const isBlogPost = Boolean(currentBlogPost);
+  const isBlogIndex = normalizedPath === '/blog';
+  const isBlogRoute = isBlogPost || isBlogIndex;
+  const featuredBlogPosts = getFeaturedBlogPosts();
   const BlogContent = currentBlogPost?.Component;
   const dateFormatter = new Intl.DateTimeFormat(lang === 'es' ? 'es-HN' : 'en-US', {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
   });
-  const sectionHref = (href) => (isBlogPost && href.startsWith('#') ? `${BASE}${href}` : href);
+  const sectionHref = (href) => (isBlogRoute && href.startsWith('#') ? `${BASE}${href}` : href);
+  const blogHref = withBase('blog/');
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
@@ -736,13 +771,17 @@ function App() {
         }`}
       >
         <div className="mx-auto flex h-[88px] max-w-7xl items-center justify-between px-5 md:px-8">
-          <a href={isBlogPost ? BASE : '#inicio'} className="flex items-center" aria-label="CEHMEFE">
+          <a href={isBlogRoute ? BASE : '#inicio'} className="flex items-center" aria-label="CEHMEFE">
             <img src={logo} alt="CEHMEFE" className="h-[82px] w-[82px] object-contain" />
           </a>
 
           <nav className="hidden items-center gap-8 md:flex">
             {t.nav.map(([label, href]) => (
-              <a key={label} href={sectionHref(href)} className="text-sm font-semibold text-[#6D6D6D] transition hover:text-[#272829]">
+              <a
+                key={label}
+                href={label === 'Blog' ? (isBlogRoute ? blogHref : '#blog') : sectionHref(href)}
+                className="text-sm font-semibold text-[#6D6D6D] transition hover:text-[#272829]"
+              >
                 {label}
               </a>
             ))}
@@ -754,7 +793,7 @@ function App() {
               {lang === 'es' ? 'EN' : 'ES'}
             </button>
             <a
-              href={isBlogPost ? `${BASE}#agendar` : '#agendar'}
+              href={isBlogRoute ? `${BASE}#agendar` : '#agendar'}
               className="inline-flex items-center gap-2 rounded-md bg-[#272829] px-4 py-3 text-sm font-bold text-white transition hover:bg-black"
             >
               {t.hero.primary}
@@ -776,7 +815,12 @@ function App() {
           <div className="border-t border-[#E6E1E1] bg-[#F8F8F8] px-5 py-5 md:hidden">
             <div className="flex flex-col gap-4">
               {t.nav.map(([label, href]) => (
-                <a key={label} href={sectionHref(href)} className="text-lg font-semibold" onClick={() => setMenuOpen(false)}>
+                <a
+                  key={label}
+                  href={label === 'Blog' ? (isBlogRoute ? blogHref : '#blog') : sectionHref(href)}
+                  className="text-lg font-semibold"
+                  onClick={() => setMenuOpen(false)}
+                >
                   {label}
                 </a>
               ))}
@@ -798,7 +842,7 @@ function App() {
       {isBlogPost ? (
         <main className="pt-32">
           <article className="mx-auto max-w-4xl px-5 pb-24 pt-10 md:px-8 md:pb-32">
-            <a href={`${BASE}#blog`} className="inline-flex items-center gap-2 py-2 text-sm font-bold text-[#5F5F5F] transition hover:text-[#272829]">
+            <a href={blogHref} className="inline-flex items-center gap-2 py-2 text-sm font-bold text-[#5F5F5F] transition hover:text-[#272829]">
               <ChevronRight className="rotate-180" size={16} />
               {lang === 'es' ? 'Volver al blog' : 'Back to blog'}
             </a>
@@ -815,6 +859,9 @@ function App() {
               <span aria-hidden="true">·</span>
               <span>{currentBlogPost.fields[`readTime${fieldSuffix}`]}</span>
             </div>
+            <div className="mt-8">
+              <BlogAuthorByline author={currentBlogPost.author} lang={lang} />
+            </div>
             <p className="mt-8 text-xl leading-9 text-[#5F5F5F]">
               {currentBlogPost.fields[`excerpt${fieldSuffix}`]}
             </p>
@@ -830,7 +877,11 @@ function App() {
             <div className="mt-12 border-t border-[#E2DDDD] pt-4">
               {BlogContent ? <BlogContent components={mdxComponents} /> : null}
             </div>
-            <div className="mt-12 rounded-md border border-[#DDE8EC] bg-[#F4FAFC] p-6">
+            <footer className="mt-12 rounded-md border border-[#E2DDDD] bg-white p-6">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#6A8390]">{t.blog.writtenBy}</p>
+              <BlogAuthorByline author={currentBlogPost.author} lang={lang} size="lg" className="mt-4" />
+            </footer>
+            <div className="mt-8 rounded-md border border-[#DDE8EC] bg-[#F4FAFC] p-6">
               <h2 className="text-2xl font-black leading-tight">
                 {lang === 'es' ? 'Agenda una evaluación especializada' : 'Book a specialized evaluation'}
               </h2>
@@ -845,6 +896,17 @@ function App() {
               </a>
             </div>
           </article>
+        </main>
+      ) : isBlogIndex ? (
+        <main className="pt-32">
+          <BlogIndexPage
+            posts={blogPosts}
+            lang={lang}
+            fieldSuffix={fieldSuffix}
+            dateFormatter={dateFormatter}
+            copy={t.blog}
+            backHomeHref={BASE}
+          />
         </main>
       ) : (
         <main id="inicio">
@@ -994,47 +1056,47 @@ function App() {
 
         <section id="blog" className="border-y border-[#E5E0E0] bg-white py-24 md:py-32">
           <div className="mx-auto max-w-7xl px-5 md:px-8">
-            <div data-reveal className="mx-auto max-w-4xl text-center">
-              <h2 className="text-4xl font-black leading-tight md:text-6xl">{t.blog.title}</h2>
-              <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-[#5F5F5F]">{t.blog.subtitle}</p>
+            <div data-reveal className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+              <div className="max-w-3xl">
+                <h2 className="text-4xl font-black leading-tight md:text-6xl">{t.blog.title}</h2>
+                <p className="mt-6 text-lg leading-8 text-[#5F5F5F]">{t.blog.subtitle}</p>
+              </div>
+              <a
+                href={blogHref}
+                className="inline-flex shrink-0 items-center gap-2 self-start rounded-md border border-[#CFCACA] px-4 py-3 text-sm font-bold text-[#272829] transition hover:border-[#272829] hover:bg-[#F8F8F8] md:self-auto"
+              >
+                {t.blog.viewAll}
+                <ChevronRight size={16} />
+              </a>
             </div>
+          </div>
 
-            <div className="mt-12 grid gap-5 lg:grid-cols-3">
-              {blogPosts.map((post, index) => {
-                const title = post.fields[`title${fieldSuffix}`];
-                const excerpt = post.fields[`excerpt${fieldSuffix}`];
-                const coverAlt = post.fields[`coverAlt${fieldSuffix}`] || title;
-                const dateText = dateFormatter.format(new Date(`${post.fields.date}T00:00:00`));
-                const postHref = withBase(`blog/${post.slug}/`);
-
-                return (
-                  <article key={post.slug} data-reveal style={{ '--reveal-delay': `${index * 80}ms` }} className="overflow-hidden rounded-md border border-[#E2DDDD] bg-[#F8F8F8]">
-                    {post.fields.cover ? (
-                      <a href={postHref} className="block overflow-hidden border-b border-[#E2DDDD] bg-[#F1F1F1]">
-                        <img
-                          src={asset(post.fields.cover)}
-                          alt={coverAlt}
-                          className="aspect-[16/10] h-auto w-full object-cover transition duration-500 hover:scale-[1.03]"
-                          loading="lazy"
-                        />
-                      </a>
-                    ) : null}
-                    <div className="p-6">
-                      <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#6A8390]">
-                        {post.fields[`category${fieldSuffix}`]}
-                      </p>
-                      <h3 className="mt-3 text-2xl font-black leading-tight">{title}</h3>
-                      <time className="mt-4 block text-sm font-semibold text-[#6A8390]" dateTime={post.fields.date}>{dateText}</time>
-                      <p className="mt-4 text-sm leading-7 text-[#656565]">{excerpt}</p>
-
-                      <a href={postHref} className="mt-5 inline-flex items-center gap-2 rounded-md border border-[#CFCACA] px-4 py-3 text-sm font-bold text-[#272829] transition hover:border-[#272829] hover:bg-white">
-                        {t.blog.readMore}
-                        <ChevronRight size={16} />
-                      </a>
-                    </div>
-                  </article>
-                );
-              })}
+          <div data-reveal className="mt-12">
+            <p className="mb-4 px-5 text-xs font-bold uppercase tracking-[0.18em] text-[#A1A0A1] md:px-8 lg:mx-auto lg:max-w-7xl lg:px-8">
+              {lang === 'es' ? 'Desliza para ver más artículos' : 'Swipe to see more articles'}
+            </p>
+            <div className="blog-gallery flex items-stretch snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-2 md:px-8 lg:mx-auto lg:max-w-7xl lg:px-8">
+              {featuredBlogPosts.map((post) => (
+                <BlogPostCard
+                  key={post.slug}
+                  post={post}
+                  lang={lang}
+                  fieldSuffix={fieldSuffix}
+                  dateFormatter={dateFormatter}
+                  readMoreLabel={t.blog.readMore}
+                  compact
+                  className="w-[min(84vw,340px)] shrink-0 snap-start self-stretch"
+                />
+              ))}
+            </div>
+            <div className="mt-8 flex justify-center px-5 md:px-8">
+              <a
+                href={blogHref}
+                className="inline-flex items-center gap-2 rounded-md bg-[#272829] px-5 py-3 text-sm font-bold text-white transition hover:bg-black"
+              >
+                {t.blog.viewAll}
+                <ChevronRight size={16} />
+              </a>
             </div>
           </div>
         </section>
@@ -1184,7 +1246,7 @@ function App() {
               <a href={sectionHref('#servicios')} className="hover:text-[#272829]">{lang === 'es' ? 'Servicios' : 'Services'}</a>
               <a href={sectionHref('#tecnologia')} className="hover:text-[#272829]">{lang === 'es' ? 'Tecnología' : 'Technology'}</a>
               <a href={sectionHref('#especialista')} className="hover:text-[#272829]">{lang === 'es' ? 'Especialista' : 'Specialist'}</a>
-              <a href={sectionHref('#blog')} className="hover:text-[#272829]">Blog</a>
+              <a href={blogHref} className="hover:text-[#272829]">Blog</a>
               <a href={sectionHref('#agendar')} className="hover:text-[#272829]">{lang === 'es' ? 'Agendar cita' : 'Book appointment'}</a>
               <a
                 className="inline-flex items-center gap-2 hover:text-[#272829]"

@@ -76,3 +76,22 @@ body {
 .animate-shimmer-subtle {
   animation: shimmer-subtle 2s ease-in-out infinite;
 }
+
+.blog-gallery {
+  scrollbar-width: thin;
+  scrollbar-color: #cfcaca transparent;
+  align-items: stretch;
+}
+
+.blog-gallery > * {
+  align-self: stretch;
+}
+
+.blog-gallery::-webkit-scrollbar {
+  height: 8px;
+}
+
+.blog-gallery::-webkit-scrollbar-thumb {
+  background: #cfcaca;
+  border-radius: 999px;
+}

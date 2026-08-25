@@ -25,6 +25,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(rootDir, 'index.html'),
+        blog: resolve(rootDir, 'blog/index.html'),
         'blog-ultrasonido-segun-semana': resolve(rootDir, 'blog/ultrasonido-segun-semana/index.html'),
         'blog-hera-z20-tecnologia': resolve(rootDir, 'blog/hera-z20-tecnologia/index.html'),
         'blog-modelos-3d-accesibilidad': resolve(rootDir, 'blog/modelos-3d-accesibilidad/index.html'),
