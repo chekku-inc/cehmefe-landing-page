@@ -25,3 +25,6 @@ npm-debug.log*
 
 # Optional
 *.local
+
+# Local working files / exports
+Claude outputs/

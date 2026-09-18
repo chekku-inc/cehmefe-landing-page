@@ -10,7 +10,7 @@ export const authors = {
     nameEn: 'Dr. Monica Garcia',
     roleEs: 'Especialista en Medicina Fetal',
     roleEn: 'Fetal Medicine Specialist',
-    avatar: 'doctor-photos/IMG_6048.JPG',
+    avatar: 'doctor-photos/dra-monica-portrait.jpg',
   },
 };
 

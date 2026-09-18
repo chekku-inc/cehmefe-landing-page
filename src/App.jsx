@@ -34,8 +34,8 @@ const withBase = (path) => `${BASE}${path.replace(/^\//, '')}`;
 
 const logo = asset('Logo/cehmefe-logo.png');
 const images = {
-  hero: asset('doctor-photos/IMG_6047.JPG'),
-  portrait: asset('doctor-photos/IMG_6048.JPG'),
+  hero: asset('doctor-photos/dra-monica-hero.jpg'),
+  portrait: asset('doctor-photos/dra-monica-portrait.jpg'),
   office: asset('doctor-photos/IMG_1988.JPG'),
   consult: asset('doctor-photos/IMG_1992.JPG'),
   equipment: asset('doctor-photos/IMG_1986.JPG'),
@@ -294,26 +294,30 @@ function HeroSection({ t, lang, heroTitleIndex }) {
     offset: ['start start', 'end start'],
   });
 
-  const imageY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [0, 140]);
-  const imageScale = useTransform(scrollYProgress, [0, 1], reduceMotion ? [1.1, 1.1] : [1.1, 1.2]);
-  const contentY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [0, 70]);
+  const imageY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [0, 90]);
+  const imageScale = useTransform(scrollYProgress, [0, 1], reduceMotion ? [1.04, 1.04] : [1.04, 1.1]);
+  const contentY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [0, 50]);
 
   return (
-    <section ref={heroRef} className="relative flex min-h-[92vh] items-end overflow-hidden">
-      <motion.div style={{ y: imageY, scale: imageScale }} className="absolute inset-0 will-change-transform">
+    <section ref={heroRef} className="relative flex min-h-[92vh] items-end overflow-hidden bg-[#272829]">
+      <motion.div
+        style={{ y: imageY, scale: imageScale }}
+        className="absolute inset-y-0 right-0 left-[8%] will-change-transform sm:left-[22%] md:left-[36%] lg:left-[40%]"
+      >
         <img
           src={images.hero}
-          alt="Dra. Mónica García junto a equipo de ultrasonido"
-          className="h-full w-full object-cover"
+          alt="Dra. Mónica García, especialista en medicina fetal"
+          className="h-full w-full object-cover object-[center_8%] md:object-[center_6%]"
         />
       </motion.div>
-      <div className="absolute inset-0 bg-gradient-to-t from-[#272829]/90 via-[#272829]/45 to-[#272829]/25" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#272829] via-[#272829]/88 to-[#272829]/25 sm:via-[#272829]/75 sm:to-transparent md:via-[#272829]/55" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#272829]/80 via-transparent to-[#272829]/30" />
 
       <motion.div
         style={{ y: contentY }}
         className="relative z-10 mx-auto w-full max-w-7xl px-5 pb-16 pt-40 will-change-transform md:px-8 md:pb-24"
       >
-        <div className="max-w-3xl">
+        <div className="max-w-xl lg:max-w-2xl">
           <h1 className="text-5xl font-black leading-[0.98] tracking-normal text-white md:text-7xl">
             {t.hero.titleLead}
             <TextMorph
