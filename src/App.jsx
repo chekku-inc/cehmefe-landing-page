@@ -1,910 +1,1279 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import doctorHero from '../FB_IMG_1772487438695.jpg';
+import React, { useEffect, useRef, useState } from 'react';
+import { TextMorph } from 'torph/react';
+import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from 'motion/react';
+import { blogPosts, getFeaturedBlogPosts } from './blog/posts';
+import { mdxComponents } from './blog/mdxComponents';
+import { BlogAuthorByline, BlogIndexPage, BlogPostCard } from './blog/BlogUi';
 import {
-  ChevronRight,
-  BrainCircuit,
-  ShieldCheck,
-  Globe,
-  Menu,
-  X,
-  MapPin,
-  Phone,
-  Instagram,
-  Clock,
-  Baby,
-  HeartPulse,
-  Activity,
-  Smartphone,
-  Apple,
-  MessageCircle,
   Award,
-  Sparkles,
-  CheckCircle2,
+  Baby,
+  Brain,
+  CalendarCheck,
+  ChevronRight,
+  Clock,
+  Dna,
+  HeartPulse,
+  Instagram,
+  Mail,
+  MapPin,
+  Menu,
+  MessageCircle,
+  Microscope,
+  Phone,
+  Ruler,
+  ScanLine,
+  ShieldCheck,
+  Stethoscope,
+  Waves,
+  X,
 } from 'lucide-react';
 
-// --- Custom Logo (gradient heart + CEHMEFE) ---
-const CehmefeLogo = ({ className = 'h-12 w-auto' }) => (
-  <svg viewBox="0 0 400 120" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#e11d48" />
-        <stop offset="100%" stopColor="#fb7185" />
-      </linearGradient>
-    </defs>
-    <path d="M40 60C40 37.9086 57.9086 20 80 20C102.091 20 120 37.9086 120 60C120 82.0914 102.091 100 80 100C57.9086 100 40 82.0914 40 60Z" stroke="url(#logoGrad)" strokeWidth="8" strokeLinecap="round" />
-    <path d="M65 60C65 51.7157 71.7157 45 80 45C88.2843 45 95 51.7157 95 60" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-    <circle cx="80" cy="75" r="8" fill="url(#logoGrad)" />
-    <text x="140" y="70" className="font-serif fill-current text-3xl font-bold tracking-tighter">CEHMEFE</text>
-    <text x="140" y="90" className="font-sans fill-current opacity-60 text-[10px] tracking-[0.2em] uppercase font-semibold">Medicine Fetal Center</text>
-  </svg>
-);
+const BASE = import.meta.env.BASE_URL;
+const asset = (path) => `${BASE}${path}`;
+const withBase = (path) => `${BASE}${path.replace(/^\//, '')}`;
 
-const App = () => {
-  const [lang, setLang] = useState('es');
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [showAIChat, setShowAIChat] = useState(false);
+const logo = asset('Logo/cehmefe-logo.png');
+const images = {
+  hero: asset('doctor-photos/dra-monica-hero.jpg'),
+  portrait: asset('doctor-photos/dra-monica-portrait.jpg'),
+  office: asset('doctor-photos/IMG_1988.JPG'),
+  consult: asset('doctor-photos/IMG_1992.JPG'),
+  equipment: asset('doctor-photos/IMG_1986.JPG'),
+  heraDesktop: asset('Logo/hera_z20.png'),
+  heraMobile: asset('Logo/hera_z20_mobile.jpg'),
+  tactileModel: asset('assets/tactile-ultrasound-model.svg'),
+};
+
+const studyImages = [
+  asset('assets/study1.png'),
+  asset('assets/study2.png'),
+  asset('assets/study3.png'),
+  asset('assets/study4.png'),
+];
+
+// CEHMEFE palette, alternated across cards/chips (#272829 · #A1A0A1 · #F6F1F1 · #F8F8F8)
+const specialtyStyles = [
+  'border-transparent bg-[#272829] text-white',
+  'border-transparent bg-[#A1A0A1] text-white',
+  'border-[#E2DDDD] bg-[#F6F1F1] text-[#272829]',
+  'border-[#E2DDDD] bg-white text-[#272829]',
+];
+
+const specialtyIcons = [Stethoscope, Baby, ScanLine, Microscope, HeartPulse, Ruler, Waves, Brain];
+
+const guideIcons = [HeartPulse, Dna, Baby, Stethoscope];
+const guideIconStyles = [
+  'bg-[#272829] text-white',
+  'bg-[#A1A0A1] text-white',
+  'bg-[#F6F1F1] text-[#272829]',
+  'bg-[#EAF4F7] text-[#272829]',
+];
+
+// --- Interactive rotated cards (adapted from Aceternity "interface crafts cards") ---
+const serviceCardThemes = [
+  { card: 'bg-[#272829] text-white', desc: 'text-white/75' },
+  { card: 'bg-[#F6F1F1] text-[#272829] border border-[#E2DDDD]', desc: 'text-[#5F5F5F]' },
+  { card: 'bg-[#A1A0A1] text-white', desc: 'text-white/85' },
+  { card: 'bg-[#F8F8F8] text-[#272829] border border-[#E2DDDD]', desc: 'text-[#5F5F5F]' },
+];
+
+const desktopCardConfigs = [
+  { y: -18, rotate: -13, zIndex: 2 },
+  { y: 22, rotate: 7, zIndex: 3 },
+  { y: -46, rotate: -5, zIndex: 4 },
+  { y: 20, rotate: 11, zIndex: 5 },
+];
+
+const cardSpring = { type: 'spring', stiffness: 280, damping: 28, mass: 0.9 };
+
+function ServiceCardContent({ item, theme, showDesc, imageClassName }) {
+  return (
+    <>
+      <div className={`flex w-full shrink-0 items-center justify-center rounded-xl bg-white p-3 ${imageClassName}`}>
+        <img src={item.image} alt="" aria-hidden="true" className="h-full w-full object-contain" loading="lazy" />
+      </div>
+      <div className="mt-3 w-full lg:mt-4">
+        <h3 className="text-left text-lg font-black leading-tight lg:text-2xl">{item.title}</h3>
+        <AnimatePresence initial={false}>
+          {showDesc && (
+            <motion.p
+              key={`${item.title}-desc`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 6 }}
+              transition={{ duration: 0.25 }}
+              className={`mt-2 text-left text-sm leading-6 lg:mt-3 ${theme.desc}`}
+            >
+              {item.desc}
+            </motion.p>
+          )}
+        </AnimatePresence>
+      </div>
+    </>
+  );
+}
+
+function RotatedServiceCards({ items }) {
+  const [active, setActive] = useState(null);
+  const [focus, setFocus] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const [isLarge, setIsLarge] = useState(null);
+  const ref = useRef(null);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const handleClickOutside = (event) => {
+      if (!isLarge) return;
+      if (ref.current && !ref.current.contains(event.target)) {
+        setActive(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isLarge]);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const updateMode = () => setIsLarge(mq.matches);
+    updateMode();
+    mq.addEventListener('change', updateMode);
+    return () => mq.removeEventListener('change', updateMode);
   }, []);
 
-  const serviceIcons = [Activity, BrainCircuit, HeartPulse, Baby];
+  const middle = (items.length - 1) / 2;
+  const isAnyActive = active !== null;
+  const desktopSpacing = 230;
+  const ready = isLarge !== null;
+  const focusedItem = items[focus];
+  const focusedTheme = serviceCardThemes[focus % serviceCardThemes.length];
 
-  const content = {
-    es: {
-      nav: ['Servicios', 'Tecnología', 'Especialista', 'Citas'],
-      hero: {
-        badge: 'Cuidado Fetal de Vanguardia',
-        title: 'La vida comienza con el mejor cuidado.',
-        subtitle:
-          'Especialistas en Medicina Fetal y ultrasonidos de alta definición en San Pedro Sula. Tecnología 5D para el diagnóstico más preciso.',
-        cta: 'Agendar Cita',
-        secondary: 'Conocer Tecnología',
-        ai: 'Asistente IA 24/7',
-      },
-      stats: [
-        { label: 'Años de Experiencia', value: '12+' },
-        { label: 'Pacientes Felices', value: '5k+' },
-        { label: 'Precisión Diagnóstica', value: '99%' },
-      ],
-      services: {
-        title: 'Excelencia en Diagnóstico',
-        subtitle:
-          'Ofrecemos soluciones integrales para cada etapa de tu embarazo con calidez humana y rigor científico.',
-        items: [
-          { title: 'Morfológico 18-24', desc: 'Anatomía detallada órgano por órgano.' },
-          { title: 'Tamizaje Genético', desc: 'Detección temprana de riesgos cromosómicos.' },
-          { title: 'Ecocardiografía', desc: 'Evaluación avanzada del corazón fetal.' },
-          { title: 'Experiencia 5D', desc: 'Vínculo emocional con imágenes hiperrealistas.' },
-        ],
-      },
-      doctor: {
-        tag: 'Nuestra Especialista',
-        name: 'Dra. Mónica García',
-        role: 'Especialista en Medicina Materno Fetal',
-        bio: 'Certificada internacionalmente, la Dra. García combina años de experiencia clínica con la tecnología más avanzada para garantizar el bienestar de mamá y bebé.',
-        features: ['Medicina Fetal Certificada', 'Ultrasonido Avanzado', 'Atención Personalizada'],
-      },
-      tech: {
-        title: 'Tecnología de Punta',
-        desc: 'Utilizamos los equipos de ultrasonido más avanzados del mercado para garantizar diagnósticos certeros y una experiencia visual inigualable.',
-        features: ['Inteligencia Artificial Diagnóstica', 'Alta Resolución 4K', 'Seguimiento Digital'],
-      },
-      app: {
-        title: 'Lleva tu embarazo en la palma de tu mano',
-        subtitle:
-          'Muy pronto podrás seguir tus citas, resultados y recordatorios de chequeos desde la app CEHMEFE.',
-        bullets: [
-          'Calendario de controles y ultrasonidos recomendado por la Dra. Mónica.',
-          'Resumen de estudios y hallazgos clave siempre disponibles.',
-          'Recordatorios suaves para no olvidar tus próximas citas.',
-        ],
-      },
-      faq: {
-        title: 'Asistente CEHMEFE con IA',
-        subtitle:
-          'Un chatbot entrenado por la Dra. Mónica para responder tus preguntas frecuentes sobre embarazo y estudios.',
-        note: 'Las respuestas mostradas son solo ejemplos. Pronto integraremos un asistente con IA y RAG entrenado con la experiencia clínica de la Dra. Mónica.',
-        questions: [
-          {
-            q: '¿En qué semana debo hacerme el ultrasonido morfológico?',
-            a: 'Generalmente entre las semanas 18 y 24, según tu control prenatal.',
-          },
-          {
-            q: '¿Qué es un ultrasonido de viabilidad fetal?',
-            a: 'Es un estudio temprano que confirma la presencia del embarazo y evalúa el latido cardiaco.',
-          },
-          {
-            q: '¿El ultrasonido le hace daño al bebé?',
-            a: 'No. Cuando se realiza con equipos adecuados y por personal entrenado es un estudio seguro.',
-          },
-        ],
-      },
-      testimonials: {
-        title: 'Testimonios de mamás CEHMEFE',
-        subtitle: 'Historias reales de tranquilidad y acompañamiento durante el embarazo.',
-        items: [
-          {
-            name: 'Ana María',
-            role: 'Mamá primeriza',
-            quote:
-              'La Dra. García me explicó cada detalle del ultrasonido y salí con una paz que no había sentido en semanas.',
-            image:
-              'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=400&h=400',
-          },
-          {
-            name: 'Carolina',
-            role: 'Embarazo de alto riesgo',
-            quote:
-              'En CEHMEFE sentí que mi bebé y yo estábamos en manos expertas. El seguimiento fue muy humano y profesional.',
-            image:
-              'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=400&h=400&sat=-30',
-          },
-          {
-            name: 'Gabriela',
-            role: 'Segundo bebé',
-            quote:
-              'La tecnología de imagen es impresionante. Pudimos ver a nuestro bebé con una claridad increíble y eso nos dio mucha confianza.',
-            image:
-              'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=400&h=400',
-          },
-        ],
-      },
-      footer: {
-        address: 'Local 1503, Nivel 15, Nuevos Horizontes Business Center, San Pedro Sula.',
-        rights: '© 2026 CEHMEFE. San Pedro Sula, Honduras.',
-      },
-    },
-    en: {
-      nav: ['Services', 'Technology', 'Specialist', 'Booking'],
-      hero: {
-        badge: 'Cutting-edge Fetal Care',
-        title: 'Life begins with the finest care.',
-        subtitle:
-          'Fetal Medicine specialists and high-definition ultrasounds in San Pedro Sula. 5D technology for the most precise diagnosis.',
-        cta: 'Book Appointment',
-        secondary: 'Our Technology',
-        ai: '24/7 AI Assistant',
-      },
-      stats: [
-        { label: 'Years Experience', value: '12+' },
-        { label: 'Happy Patients', value: '5k+' },
-        { label: 'Diagnostic Accuracy', value: '99%' },
-      ],
-      services: {
-        title: 'Diagnostic Excellence',
-        subtitle:
-          'We offer comprehensive solutions for every stage of your pregnancy with human warmth and scientific rigor.',
-        items: [
-          { title: 'Morphology 18-24', desc: 'Detailed organ-by-organ anatomy.' },
-          { title: 'Genetic Screening', desc: 'Early detection of chromosomal risks.' },
-          { title: 'Echocardiography', desc: 'Advanced fetal heart evaluation.' },
-          { title: '5D Experience', desc: 'Emotional bonding with hyper-realistic images.' },
-        ],
-      },
-      doctor: {
-        tag: 'Our Specialist',
-        name: 'Dr. Monica Garcia',
-        role: 'Maternal-Fetal Medicine Specialist',
-        bio: 'Internationally certified, Dr. Garcia combines years of clinical experience with state-of-the-art technology to ensure maternal and fetal well-being.',
-        features: ['Certified Fetal Medicine', 'Advanced Ultrasound', 'Personalized Care'],
-      },
-      tech: {
-        title: 'State-of-the-Art Tech',
-        desc: 'We use the most advanced ultrasound equipment on the market to ensure accurate diagnoses and an unmatched visual experience.',
-        features: ['Diagnostic AI', '4K High Resolution', 'Digital Tracking'],
-      },
-      app: {
-        title: 'Your pregnancy, organized in one app',
-        subtitle:
-          'Soon you will be able to track appointments, results, and follow-ups from the CEHMEFE mobile app.',
-        bullets: [
-          'Control calendar and ultrasound schedule curated by Dr. Monica.',
-          'Key ultrasound findings and reports at your fingertips.',
-          'Gentle reminders so you never miss an important visit.',
-        ],
-      },
-      faq: {
-        title: 'CEHMEFE AI Assistant',
-        subtitle:
-          'A chatbot trained by Dr. Monica to answer the most common questions about pregnancy and fetal medicine.',
-        note: 'The answers shown are mock examples. We will soon integrate a RAG-based assistant powered by the clinical expertise of Dr. Monica.',
-        questions: [
-          {
-            q: 'When should I schedule my morphology scan?',
-            a: 'Usually between weeks 18 and 24 of pregnancy, depending on your prenatal control.',
-          },
-          {
-            q: 'What is a fetal viability ultrasound?',
-            a: 'It is an early scan that confirms the presence of pregnancy and evaluates the heartbeat.',
-          },
-          {
-            q: 'Is ultrasound harmful for my baby?',
-            a: 'No. When performed with proper equipment and trained staff, it is considered safe.',
-          },
-        ],
-      },
-      testimonials: {
-        title: 'Stories from CEHMEFE moms',
-        subtitle: 'Real experiences from families who trusted us with their pregnancy.',
-        items: [
-          {
-            name: 'Anna',
-            role: 'First-time mom',
-            quote:
-              'From the very first scan I felt truly cared for. Everything was explained with patience and empathy.',
-            image:
-              'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=400&h=400',
-          },
-          {
-            name: 'Caroline',
-            role: 'High-risk pregnancy',
-            quote:
-              'The fetal medicine team gave us confidence at every visit. Their detailed ultrasounds helped us stay calm.',
-            image:
-              'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=400&h=400&sat=-30',
-          },
-          {
-            name: 'Gabrielle',
-            role: 'Second pregnancy',
-            quote:
-              'Seeing our baby in such high definition was unforgettable. We felt in expert, caring hands the whole time.',
-            image:
-              'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=400&h=400',
-          },
-        ],
-      },
-      footer: {
-        address: 'Suite 1503, Level 15, Nuevos Horizontes Business Center, San Pedro Sula.',
-        rights: '© 2026 CEHMEFE. San Pedro Sula, Honduras.',
-      },
-    },
+  const goTo = (nextIndex) => {
+    const clamped = (nextIndex + items.length) % items.length;
+    setDirection(clamped > focus || (focus === items.length - 1 && clamped === 0) ? 1 : -1);
+    setFocus(clamped);
   };
 
-  const t = content[lang];
+  const cycleFocus = (dir) => {
+    setDirection(dir);
+    setFocus((current) => (current + dir + items.length) % items.length);
+  };
+
+  if (!ready) {
+    return <div className="h-[480px] w-full lg:h-[600px]" aria-hidden="true" />;
+  }
+
+  // Mobile: one full card, finger-swipeable with spring motion
+  if (!isLarge) {
+    return (
+      <div className="relative flex w-full flex-col items-center justify-center">
+        <div className="relative mx-auto flex h-[430px] w-full max-w-sm touch-pan-y items-center justify-center overflow-hidden px-2">
+          <motion.article
+            key={focus}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.85}
+            onDragEnd={(_, info) => {
+              const swipe = info.offset.x;
+              const velocity = info.velocity.x;
+              if (swipe < -56 || velocity < -400) cycleFocus(1);
+              else if (swipe > 56 || velocity > 400) cycleFocus(-1);
+            }}
+            initial={{ opacity: 0, x: direction * 48, rotate: direction * 4, scale: 0.96 }}
+            animate={{ opacity: 1, x: 0, rotate: -2, scale: 1 }}
+            transition={cardSpring}
+            className={`flex h-[400px] w-[min(100%,300px)] cursor-grab flex-col items-start overflow-hidden rounded-2xl p-5 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.45)] active:cursor-grabbing ${focusedTheme.card}`}
+            style={{ touchAction: 'pan-y' }}
+          >
+            <ServiceCardContent
+              item={focusedItem}
+              theme={focusedTheme}
+              showDesc
+              imageClassName="h-36 pointer-events-none"
+            />
+          </motion.article>
+        </div>
+
+        <div className="mt-3 flex items-center justify-center gap-4">
+          <button
+            type="button"
+            aria-label="Anterior"
+            onClick={() => cycleFocus(-1)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#E2DDDD] bg-white text-[#272829]"
+          >
+            <ChevronRight className="rotate-180" size={18} />
+          </button>
+          <div className="flex items-center justify-center gap-2">
+            {items.map((item, index) => (
+              <button
+                key={`${item.title}-dot`}
+                type="button"
+                aria-label={item.title}
+                onClick={() => goTo(index)}
+                className={`h-2.5 rounded-full transition-all duration-300 ${
+                  focus === index ? 'w-7 bg-[#272829]' : 'w-2.5 bg-[#C9C8C9]'
+                }`}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            aria-label="Siguiente"
+            onClick={() => cycleFocus(1)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#E2DDDD] bg-white text-[#272829]"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#FCFCFD] text-slate-900 font-sans selection:bg-rose-100 selection:text-rose-600">
-      {/* --- Navigation --- */}
-      <nav
-        className={`fixed top-0 w-full z-[100] transition-all duration-500 ${
-          scrolled ? 'bg-white/80 backdrop-blur-xl shadow-lg shadow-slate-200/20 py-3' : 'bg-transparent py-6'
+    <div className="relative z-0 isolate flex w-full flex-col items-center justify-center py-4">
+      <div
+        ref={ref}
+        onClick={() => setActive(null)}
+        className={`relative mx-auto flex w-full max-w-6xl items-center justify-center overflow-hidden transition-[height] duration-500 ease-out ${
+          isAnyActive ? 'h-[840px]' : 'h-[600px]'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-          <CehmefeLogo className={`h-10 w-auto transition-all ${scrolled ? 'text-slate-900' : 'text-slate-900'}`} />
+        {items.map((item, index) => {
+          const config = desktopCardConfigs[index % desktopCardConfigs.length];
+          const theme = serviceCardThemes[index % serviceCardThemes.length];
+          const isActive = active === index;
+          const desktopOffsetX = (index - middle) * desktopSpacing;
+          // When expanded: featured card above, others as a compact fan below with a small gap
+          const stackOffsetX = (index - middle) * 95;
 
-          <div className="hidden md:flex items-center gap-10">
-            {t.nav.map((item) => (
+          return (
+            <motion.button
+              key={item.title}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setActive(index);
+              }}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{
+                y: isActive ? -155 : isAnyActive ? 245 : config.y,
+                x: isActive ? 0 : isAnyActive ? stackOffsetX : desktopOffsetX,
+                rotate: isActive ? 0 : isAnyActive ? 0.15 * config.rotate : config.rotate,
+                scale: isActive ? 1.05 : isAnyActive ? 0.68 : 1,
+                opacity: 1,
+              }}
+              whileHover={{ scale: isActive ? 1.05 : isAnyActive ? 0.68 : 1.05 }}
+              transition={cardSpring}
+              style={{
+                width: 300,
+                height: 420,
+                marginLeft: -150,
+                marginTop: -210,
+                // Keep below fixed header (z-50)
+                zIndex: isActive ? 20 : config.zIndex,
+              }}
+              className={`absolute top-1/2 left-1/2 flex cursor-pointer flex-col items-start overflow-hidden rounded-2xl p-4 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.45)] ${theme.card}`}
+            >
+              <ServiceCardContent
+                item={item}
+                theme={theme}
+                showDesc={isActive}
+                imageClassName="h-48"
+              />
+            </motion.button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function HeroSection({ t, lang, heroTitleIndex }) {
+  const heroRef = useRef(null);
+  const reduceMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start'],
+  });
+
+  const imageY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [0, 90]);
+  const imageScale = useTransform(scrollYProgress, [0, 1], reduceMotion ? [1.04, 1.04] : [1.04, 1.1]);
+  const contentY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [0, 50]);
+
+  return (
+    <section ref={heroRef} className="relative flex min-h-[92vh] items-end overflow-hidden bg-[#272829]">
+      <motion.div
+        style={{ y: imageY, scale: imageScale }}
+        className="absolute inset-y-0 right-0 left-[8%] will-change-transform sm:left-[22%] md:left-[36%] lg:left-[40%]"
+      >
+        <img
+          src={images.hero}
+          alt="Dra. Mónica García, especialista en medicina fetal"
+          className="h-full w-full object-cover object-[center_8%] md:object-[center_6%]"
+        />
+      </motion.div>
+      <div className="absolute inset-0 bg-gradient-to-r from-[#272829] via-[#272829]/88 to-[#272829]/25 sm:via-[#272829]/75 sm:to-transparent md:via-[#272829]/55" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#272829]/80 via-transparent to-[#272829]/30" />
+
+      <motion.div
+        style={{ y: contentY }}
+        className="relative z-10 mx-auto w-full max-w-7xl px-5 pb-16 pt-40 will-change-transform md:px-8 md:pb-24"
+      >
+        <div className="max-w-xl lg:max-w-2xl">
+          <h1 className="text-5xl font-black leading-[0.98] tracking-normal text-white md:text-7xl">
+            {t.hero.titleLead}
+            <TextMorph
+              as="span"
+              duration={720}
+              ease="cubic-bezier(0.22, 1, 0.36, 1)"
+              className="hero-morph-title mt-2 block min-h-[2em] max-w-full font-serif italic md:min-h-[1em]"
+            >
+              {t.hero.titleMorphs[heroTitleIndex]}
+            </TextMorph>
+          </h1>
+          <p className="mt-7 max-w-xl text-lg leading-8 text-white/85">{t.hero.subtitle}</p>
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <a
+              href="#agendar"
+              className="inline-flex items-center justify-center gap-2 rounded-md bg-white px-6 py-4 text-sm font-bold text-[#272829] transition hover:bg-[#F6F1F1]"
+            >
+              {t.hero.primary}
+              <CalendarCheck size={18} />
+            </a>
+            <a
+              href="#servicios"
+              className="inline-flex items-center justify-center rounded-md border border-white/60 px-6 py-4 text-sm font-bold text-white transition hover:border-white hover:bg-white/10"
+            >
+              {t.hero.secondary}
+            </a>
+          </div>
+          <p className="mt-10 max-w-md border-l-2 border-white/50 pl-4 text-xl font-black leading-tight text-white md:text-2xl">
+            {lang === 'es' ? 'Claridad médica para una etapa sensible.' : 'Medical clarity for a sensitive stage.'}
+          </p>
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
+const content = {
+  es: {
+    nav: [
+      ['Servicios', '#servicios'],
+      ['Tecnología', '#tecnologia'],
+      ['Especialista', '#especialista'],
+      ['Blog', '#blog'],
+      ['Agendar', '#agendar'],
+    ],
+    hero: {
+      titleLead: 'Medicina fetal con ',
+      titleMorphs: [
+        'claridad y cuidado.',
+        'confianza y calma.',
+        'atención humana.',
+      ],
+      subtitle:
+        'Centro de medicina fetal en San Pedro Sula, Honduras. Te acompañamos durante el embarazo con estudios especializados de tu bebé, explicando cada resultado con claridad y cuidado.',
+      primary: 'Agendar cita',
+      secondary: 'Ver servicios',
+    },
+    trust: [
+      { icon: ShieldCheck, value: 'Médicos certificados', label: 'Atención especializada en medicina fetal' },
+      { icon: Award, value: 'Experiencia clínica', label: 'Acompañamiento claro y humano' },
+      { icon: MapPin, value: 'San Pedro Sula, Honduras', label: 'Nuevos Horizontes Business Center' },
+    ],
+    services: {
+      title: 'Estudios especializados para cada etapa del embarazo.',
+      subtitle:
+        'Evaluaciones con tecnología avanzada, explicación médica clara y un ambiente pensado para generar calma.',
+      items: [
+        {
+          title: 'Ultrasonido de viabilidad fetal',
+          desc: 'Confirmación temprana del embarazo, latido cardíaco y primeras evaluaciones del bebé.',
+        },
+        {
+          title: 'Tamizaje del primer trimestre',
+          desc: 'Evaluación no invasiva de riesgos cromosómicos entre las semanas recomendadas.',
+        },
+        {
+          title: 'Ecocardiografía fetal',
+          desc: 'Estudio detallado del corazón del bebé cuando el control prenatal lo indica.',
+        },
+        {
+          title: 'Ultrasonido morfológico',
+          desc: 'Revisión anatómica detallada del bebé, usualmente entre las semanas 18 y 24.',
+        },
+      ],
+      moreTitle: 'También realizamos',
+      moreItems: [
+        'Diagnóstico prenatal no invasivo',
+        'Monitoreo fetal electrónico',
+        'Ultrasonido de longitud cervical',
+        'Ultrasonido pélvico 3D',
+        'Ultrasonido 3D/4D',
+        'Ultrasonido de crecimiento y desarrollo fetal',
+      ],
+    },
+    technology: {
+      title: 'Tecnología avanzada para evaluar con más precisión.',
+      subtitle:
+        'Trabajamos con el Samsung HERA Z20, un sistema de ultrasonido para salud femenina diseñado para estudios obstétricos complejos, visualización 3D/4D y asistencia inteligente durante la exploración.',
+      imageAlt: 'Ilustración de ultrasonido avanzado',
+      model: 'Samsung HERA Z20',
+      tagline: 'Nueva era de ultrasonido obstétrico',
+      modelText:
+        'Imágenes de alta calidad, herramientas de IA y visualización 3D para acompañar cada evaluación con mayor detalle.',
+      features: [
+        {
+          title: 'Claridad de imagen',
+          desc: 'Arquitectura de imagen avanzada para observar estructuras fetales con mejor contraste, profundidad y definición.',
+        },
+        {
+          title: 'Asistencia con IA',
+          desc: 'Herramientas como Live ViewAssist ayudan a identificar vistas, anotaciones y mediciones durante el estudio.',
+        },
+        {
+          title: 'Visualización 3D/4D',
+          desc: 'Funciones como PortraitVue y EzVolume apoyan la visualización volumétrica y la comprensión de estructuras.',
+        },
+        {
+          title: 'Flujo más cómodo',
+          desc: 'Configuración personalizable y diseño ergonómico para favorecer una consulta más eficiente y ordenada.',
+        },
+      ],
+      accessibilityHighlight: {
+        title: 'Una imagen que también puede sentirse.',
+        body:
+          'Con la información 3D capturada por el Samsung HERA Z20, pacientes no videntes pueden solicitar un archivo orientado a impresión 3D para convertir una imagen prenatal en un modelo táctil, cuando la calidad del estudio y el procesamiento técnico lo permiten.',
+      },
+    },
+    guide: {
+      title: '¿Qué estudio corresponde según tu semana de embarazo?',
+      subtitle:
+        'Esta guía resume momentos frecuentes de evaluación. La indicación final depende de tu historia clínica y del criterio de la especialista.',
+      items: [
+        {
+          range: 'Semanas 6-8',
+          title: 'Ultrasonido de viabilidad',
+          desc: 'Confirma embarazo, ubicación, latido cardíaco y primeras observaciones.',
+        },
+        {
+          range: 'Semanas 11-13',
+          title: 'Tamizaje del primer trimestre',
+          desc: 'Evalúa marcadores tempranos y riesgos cromosómicos de forma no invasiva.',
+        },
+        {
+          range: 'Semanas 18-24',
+          title: 'Morfología fetal',
+          desc: 'Revisión anatómica detallada del bebé y estructuras principales.',
+        },
+        {
+          range: 'Según indicación médica',
+          title: 'Estudios complementarios',
+          desc: 'Ecocardiografía fetal, longitud cervical, monitoreo fetal y crecimiento/desarrollo.',
+        },
+      ],
+      note:
+        'Si vienes referida por tu médico, comparte la orden del estudio y tus semanas de embarazo para orientarte mejor.',
+    },
+    blog: {
+      title: 'Lecturas para acompañar tu embarazo.',
+      subtitle:
+        'Artículos breves basados en las dudas más frecuentes sobre estudios prenatales, tecnología y seguimiento fetal.',
+      label: 'Blog',
+      readMore: 'Leer artículo',
+      viewAll: 'Ver todos los artículos',
+      indexTitle: 'Lecturas para acompañar tu embarazo.',
+      indexSubtitle: 'Guías claras sobre estudios prenatales, tecnología y seguimiento fetal, escritas para acompañar cada etapa del embarazo.',
+      backHome: 'Volver al inicio',
+      writtenBy: 'Escrito por',
+      allArticles: 'Todos los artículos',
+      allArticlesSubtitle: 'Explora por categoría o busca un tema específico.',
+      allCategories: 'Todos',
+      searchLabel: 'Buscar artículos',
+      searchPlaceholder: 'Buscar artículos…',
+      resultSingular: 'resultado',
+      resultPlural: 'resultados',
+      emptyTitle: 'No encontramos artículos con ese filtro.',
+      emptyBody: 'Prueba con otra categoría o limpia la búsqueda para ver todo el blog.',
+      clearFilters: 'Limpiar filtros',
+    },
+    specialist: {
+      name: 'Dra. Mónica García',
+      role: 'Especialista en Medicina Fetal',
+      body:
+        'La atención combina experiencia clínica, evaluación cuidadosa y comunicación cercana. Cada estudio se explica con lenguaje claro para que las familias comprendan los hallazgos y puedan tomar decisiones con tranquilidad.',
+      credentialsLabel: 'Especialidades y experiencia',
+      points: [
+        'Ginecología y Obstetricia',
+        'Medicina Fetal',
+        'Ultrasonido obstétrico avanzado',
+        'Diagnóstico prenatal',
+        'Ecocardiografía fetal',
+        'Seguimiento del crecimiento fetal',
+        'Ultrasonido Ginecológico',
+        'Neurosonografía Fetal',
+      ],
+    },
+    appointment: {
+      title: 'Agenda tu cita o escríbenos.',
+      subtitle:
+        'Atendemos por WhatsApp, llamada o correo. Para orientarte mejor, comparte tus semanas de embarazo, el estudio indicado y si vienes referida por tu médico.',
+      hours: 'Lunes a viernes 8:00 AM - 6:00 PM · Sábado 9:00 AM - 1:00 PM',
+      address: 'Local 1503, Nivel 15, Nuevos Horizontes Business Center, San Pedro Sula.',
+      email: 'info@cehmefe.com',
+      whatsapp: 'WhatsApp',
+      call: 'Llamar',
+      directions: 'Abrir en Google Maps',
+    },
+    footer: {
+      description: 'CEHMEFE es el Centro Hondureño de Medicina Fetal en San Pedro Sula. Estudios prenatales especializados, tecnología avanzada y acompañamiento médico claro y humano.',
+      contact: 'Contacto',
+      links: 'Enlaces',
+      rights: '© 2026 CEHMEFE. Centro Hondureño de Medicina Fetal. San Pedro Sula, Honduras.',
+    },
+  },
+  en: {
+    nav: [
+      ['Services', '#servicios'],
+      ['Technology', '#tecnologia'],
+      ['Specialist', '#especialista'],
+      ['Blog', '#blog'],
+      ['Booking', '#agendar'],
+    ],
+    hero: {
+      titleLead: 'Fetal medicine with ',
+      titleMorphs: [
+        'clarity and care.',
+        'confidence and calm.',
+        'human attention.',
+      ],
+      subtitle:
+        'Fetal medicine center in San Pedro Sula, Honduras. We accompany you through pregnancy with specialized studies of your baby, explaining each result with clarity and care.',
+      primary: 'Book appointment',
+      secondary: 'View services',
+    },
+    trust: [
+      { icon: ShieldCheck, value: 'Certified care', label: 'Specialized fetal medicine support' },
+      { icon: Award, value: 'Clinical experience', label: 'Clear and human accompaniment' },
+      { icon: MapPin, value: 'San Pedro Sula, Honduras', label: 'Nuevos Horizontes Business Center' },
+    ],
+    services: {
+      title: 'Specialized studies for every stage of pregnancy.',
+      subtitle:
+        'Advanced technology, clear medical explanations, and a calm environment for families.',
+      items: [
+        {
+          title: 'Fetal viability ultrasound',
+          desc: 'Early confirmation of pregnancy, heartbeat, and first baby evaluations.',
+        },
+        {
+          title: 'First trimester screening',
+          desc: 'Non-invasive chromosomal risk evaluation during the recommended weeks.',
+        },
+        {
+          title: 'Fetal echocardiography',
+          desc: 'Detailed evaluation of the baby’s heart when prenatal care indicates it.',
+        },
+        {
+          title: 'Morphology ultrasound',
+          desc: 'Detailed anatomical review, usually between weeks 18 and 24.',
+        },
+      ],
+      moreTitle: 'We also perform',
+      moreItems: [
+        'Non-invasive prenatal testing guidance',
+        'Electronic fetal monitoring',
+        'Cervical length ultrasound',
+        '3D pelvic ultrasound',
+        '3D/4D ultrasound',
+        'Fetal growth and development ultrasound',
+      ],
+    },
+    technology: {
+      title: 'Advanced technology for more precise evaluation.',
+      subtitle:
+        'We work with the Samsung HERA Z20, a women’s health ultrasound system designed for complex obstetric studies, 3D/4D visualization, and intelligent assistance during scanning.',
+      imageAlt: 'Advanced ultrasound illustration',
+      model: 'Samsung HERA Z20',
+      tagline: 'A new era of obstetric ultrasound',
+      modelText:
+        'High-quality images, AI tools, and 3D visualization to support each evaluation with greater detail.',
+      features: [
+        {
+          title: 'Image clarity',
+          desc: 'Advanced imaging architecture helps visualize fetal structures with improved contrast, depth, and definition.',
+        },
+        {
+          title: 'AI assistance',
+          desc: 'Tools such as Live ViewAssist help identify views, annotations, and measurements during the study.',
+        },
+        {
+          title: '3D/4D visualization',
+          desc: 'Features such as PortraitVue and EzVolume support volume visualization and clearer structural understanding.',
+        },
+        {
+          title: 'Comfortable workflow',
+          desc: 'Personalized settings and ergonomic design help make each visit more efficient and organized.',
+        },
+      ],
+      accessibilityHighlight: {
+        title: 'An image that can also be felt.',
+        body:
+          'With 3D information captured by the Samsung HERA Z20, patients who are blind or have low vision can request a file oriented to 3D printing, helping transform a prenatal image into a tactile model when study quality and technical processing allow it.',
+      },
+    },
+    guide: {
+      title: 'Which study matches your pregnancy week?',
+      subtitle:
+        'This guide summarizes common evaluation moments. The final indication depends on your clinical history and the specialist’s criteria.',
+      items: [
+        {
+          range: 'Weeks 6-8',
+          title: 'Viability ultrasound',
+          desc: 'Confirms pregnancy, location, heartbeat, and first observations.',
+        },
+        {
+          range: 'Weeks 11-13',
+          title: 'First trimester screening',
+          desc: 'Evaluates early markers and chromosomal risks in a non-invasive way.',
+        },
+        {
+          range: 'Weeks 18-24',
+          title: 'Fetal morphology',
+          desc: 'Detailed anatomical review of the baby and main structures.',
+        },
+        {
+          range: 'As medically indicated',
+          title: 'Complementary studies',
+          desc: 'Fetal echocardiography, cervical length, fetal monitoring, and growth/development.',
+        },
+      ],
+      note:
+        'If you were referred by your doctor, share the study order and your pregnancy week so we can guide you better.',
+    },
+    blog: {
+      title: 'Reading to support your pregnancy.',
+      subtitle:
+        'Short articles based on common questions about prenatal studies, technology, and fetal follow-up.',
+      label: 'Blog',
+      readMore: 'Read article',
+      viewAll: 'View all articles',
+      indexTitle: 'Reading to support your pregnancy.',
+      indexSubtitle: 'Clear guides on prenatal studies, technology, and fetal follow-up, written to support every stage of pregnancy.',
+      backHome: 'Back to home',
+      writtenBy: 'Written by',
+      allArticles: 'All articles',
+      allArticlesSubtitle: 'Browse by category or search for a specific topic.',
+      allCategories: 'All',
+      searchLabel: 'Search articles',
+      searchPlaceholder: 'Search articles…',
+      resultSingular: 'result',
+      resultPlural: 'results',
+      emptyTitle: 'No articles match that filter.',
+      emptyBody: 'Try another category or clear the search to see the full blog.',
+      clearFilters: 'Clear filters',
+    },
+    specialist: {
+      name: 'Dr. Monica Garcia',
+      role: 'Fetal Medicine Specialist',
+      body:
+        'Care combines clinical experience, careful evaluation, and close communication. Every study is explained in clear language so families understand the findings and can make decisions calmly.',
+      credentialsLabel: 'Specialties and experience',
+      points: [
+        'Obstetrics and Gynecology',
+        'Fetal Medicine',
+        'Advanced obstetric ultrasound',
+        'Prenatal diagnosis',
+        'Fetal echocardiography',
+        'Fetal growth follow-up',
+        'Gynecologic ultrasound',
+        'Fetal neurosonography',
+      ],
+    },
+    appointment: {
+      title: 'Book your visit or write to us.',
+      subtitle:
+        'We respond by WhatsApp, phone, or email. For better guidance, share your pregnancy week, the requested study, and whether you were referred by your doctor.',
+      hours: 'Monday to Friday 8:00 AM - 6:00 PM · Saturday 9:00 AM - 1:00 PM',
+      address: 'Suite 1503, Level 15, Nuevos Horizontes Business Center, San Pedro Sula.',
+      email: 'info@cehmefe.com',
+      whatsapp: 'WhatsApp',
+      call: 'Call',
+      directions: 'Open in Google Maps',
+    },
+    footer: {
+      description: 'CEHMEFE is the Honduran Center for Fetal Medicine in San Pedro Sula. Specialized prenatal studies, advanced technology, and clear, human medical accompaniment.',
+      contact: 'Contact',
+      links: 'Links',
+      rights: '© 2026 CEHMEFE. Honduran Center for Fetal Medicine. San Pedro Sula, Honduras.',
+    },
+  },
+};
+
+function App() {
+  const [lang, setLang] = useState('es');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [heroTitleIndex, setHeroTitleIndex] = useState(0);
+  const t = content[lang];
+  const fieldSuffix = lang === 'es' ? 'Es' : 'En';
+  const basePrefix = BASE.replace(/\/$/, '');
+  const rawPath = window.location.pathname.replace(/\/$/, '') || '/';
+  const normalizedPath =
+    basePrefix && rawPath.startsWith(basePrefix) ? rawPath.slice(basePrefix.length) || '/' : rawPath;
+  const currentBlogPost = blogPosts.find((post) => `/blog/${post.slug}` === normalizedPath);
+  const isBlogPost = Boolean(currentBlogPost);
+  const isBlogIndex = normalizedPath === '/blog';
+  const isBlogRoute = isBlogPost || isBlogIndex;
+  const featuredBlogPosts = getFeaturedBlogPosts();
+  const BlogContent = currentBlogPost?.Component;
+  const dateFormatter = new Intl.DateTimeFormat(lang === 'es' ? 'es-HN' : 'en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+  const sectionHref = (href) => (isBlogRoute && href.startsWith('#') ? `${BASE}${href}` : href);
+  const blogHref = withBase('blog/');
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 16);
+    onScroll();
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    setHeroTitleIndex(0);
+    const interval = window.setInterval(() => {
+      setHeroTitleIndex((index) => (index + 1) % content[lang].hero.titleMorphs.length);
+    }, 3400);
+    return () => window.clearInterval(interval);
+  }, [lang]);
+
+  useEffect(() => {
+    const elements = Array.from(document.querySelectorAll('[data-reveal]'));
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { rootMargin: '0px 0px -10% 0px', threshold: 0.16 },
+    );
+
+    elements.forEach((element) => observer.observe(element));
+    return () => observer.disconnect();
+  }, [lang]);
+
+  return (
+    <div className="min-h-screen bg-[#F8F8F8] text-[#272829]">
+      <header
+        className={`fixed inset-x-0 top-0 z-50 border-b transition-colors ${
+          scrolled ? 'border-[#E6E1E1] bg-[#F8F8F8]/95 backdrop-blur' : 'border-transparent bg-[#F8F8F8]/80'
+        }`}
+      >
+        <div className="mx-auto flex h-[88px] max-w-7xl items-center justify-between px-5 md:px-8">
+          <a href={isBlogRoute ? BASE : '#inicio'} className="flex items-center" aria-label="CEHMEFE">
+            <img src={logo} alt="CEHMEFE" className="h-[82px] w-[82px] object-contain" />
+          </a>
+
+          <nav className="hidden items-center gap-8 md:flex">
+            {t.nav.map(([label, href]) => (
               <a
-                key={item}
-                href={`#${item.toLowerCase()}`}
-                className="text-[13px] font-bold uppercase tracking-widest text-slate-500 hover:text-rose-600 transition-colors"
+                key={label}
+                href={label === 'Blog' ? (isBlogRoute ? blogHref : '#blog') : sectionHref(href)}
+                className="text-sm font-semibold text-[#6D6D6D] transition hover:text-[#272829]"
               >
-                {item}
+                {label}
               </a>
             ))}
-            <div className="h-6 w-px bg-slate-200 mx-2" />
             <button
+              type="button"
               onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
-              className="flex items-center gap-2 text-xs font-bold hover:text-rose-600 transition-colors uppercase tracking-widest"
+              className="rounded-md border border-[#D9D5D5] px-3 py-2 text-xs font-bold uppercase tracking-[0.18em] text-[#272829]"
             >
-              <Globe size={14} className="text-rose-500" /> {lang}
+              {lang === 'es' ? 'EN' : 'ES'}
             </button>
-            <button className="bg-slate-900 text-white px-7 py-3 rounded-full text-[13px] font-bold uppercase tracking-widest hover:bg-rose-600 transition-all transform hover:scale-105 active:scale-95 shadow-xl shadow-slate-900/10">
-              {t.hero.cta}
-            </button>
-          </div>
-
-          <button className="md:hidden p-2 text-slate-900" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
-          </button>
-        </div>
-      </nav>
-
-      {/* --- Mobile Menu --- */}
-      {isMenuOpen && (
-        <div className="fixed inset-0 z-[90] bg-white p-8 flex flex-col justify-center gap-8 animate-in fade-in zoom-in-95 duration-300">
-          {t.nav.map((item) => (
             <a
-              key={item}
-              href="#"
-              className="text-4xl font-serif font-bold text-slate-900 border-b border-slate-100 pb-4"
-              onClick={() => setIsMenuOpen(false)}
+              href={isBlogRoute ? `${BASE}#agendar` : '#agendar'}
+              className="inline-flex items-center gap-2 rounded-md bg-[#272829] px-4 py-3 text-sm font-bold text-white transition hover:bg-black"
             >
-              {item}
+              {t.hero.primary}
+              <ChevronRight size={16} />
             </a>
-          ))}
+          </nav>
+
           <button
-            onClick={() => {
-              setLang(lang === 'es' ? 'en' : 'es');
-              setIsMenuOpen(false);
-            }}
-            className="text-xl font-bold text-rose-600 flex items-center gap-3"
+            type="button"
+            className="rounded-md border border-[#D9D5D5] p-2 md:hidden"
+            onClick={() => setMenuOpen((value) => !value)}
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
           >
-            <Globe /> Switch to {lang === 'es' ? 'English' : 'Español'}
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
-      )}
 
-      {/* --- Hero Section --- */}
-      <section className="relative pt-40 pb-24 lg:pt-56 lg:pb-40 overflow-hidden">
-        <div className="absolute top-[-10%] right-[-10%] w-[50%] aspect-square bg-rose-50 rounded-full blur-[120px] -z-10 animate-pulse" />
-        <div className="absolute bottom-[-5%] left-[-5%] w-[30%] aspect-square bg-blue-50 rounded-full blur-[100px] -z-10" />
-
-        <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
-          <div className="space-y-10 relative">
-            <div className="inline-flex items-center gap-3 bg-white border border-slate-100 px-4 py-2 rounded-full shadow-sm">
-              <span className="flex h-2 w-2 rounded-full bg-rose-500 animate-ping" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">{t.hero.badge}</span>
-            </div>
-
-            <h1 className="text-6xl lg:text-8xl font-serif font-bold leading-[1.05] tracking-tight text-slate-900">
-              {t.hero.title}
-            </h1>
-
-            <p className="text-xl text-slate-500 leading-relaxed max-w-xl font-medium">{t.hero.subtitle}</p>
-
-            <div className="flex flex-wrap gap-5 pt-4">
-              <button className="bg-rose-600 text-white px-10 py-5 rounded-2xl font-bold text-lg flex items-center gap-3 hover:bg-rose-700 transition-all shadow-2xl shadow-rose-200 group">
-                {t.hero.cta}
-                <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
-              </button>
-              <button className="bg-white border-2 border-slate-100 text-slate-900 px-10 py-5 rounded-2xl font-bold text-lg hover:bg-slate-50 transition-all">
-                {t.hero.secondary}
-              </button>
-            </div>
-
-            <div className="flex gap-12 pt-8">
-              {t.stats.map((stat, i) => (
-                <div key={i} className="group">
-                  <div className="text-3xl font-serif font-bold text-slate-900 mb-1 group-hover:text-rose-600 transition-colors">
-                    {stat.value}
-                  </div>
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="relative group">
-            <div className="relative z-10 rounded-[3rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] transform transition-all duration-700 group-hover:scale-[1.02]">
-              <img src={doctorHero} alt="Dra. Mónica García" className="w-full aspect-[4/5] object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent opacity-60" />
-
-              <div className="absolute bottom-8 left-8 right-8 bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-2xl text-white">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-rose-500 flex items-center justify-center">
-                    <Sparkles className="text-white" size={24} />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-lg leading-tight">Tecnología Voluson™ E10</h4>
-                    <p className="text-xs opacity-80 uppercase tracking-widest mt-1">
-                      {lang === 'es' ? 'Imágenes en tiempo real HD' : 'Real-time HD imaging'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="absolute -top-6 -right-6 w-full h-full border-2 border-rose-100 rounded-[3rem] -z-10 transform translate-x-4 translate-y-4" />
-          </div>
-        </div>
-      </section>
-
-      {/* --- Services Section --- */}
-      <section id="servicios" className="py-32 bg-slate-900 text-white relative overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full opacity-5 pointer-events-none">
-          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-          </svg>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="max-w-2xl mb-20">
-            <h2 className="text-4xl lg:text-6xl font-serif font-bold mb-6 tracking-tight">{t.services.title}</h2>
-            <p className="text-slate-400 text-xl leading-relaxed">{t.services.subtitle}</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {t.services.items.map((item, idx) => {
-              const Icon = serviceIcons[idx];
-              return (
-                <div
-                  key={idx}
-                  className="group bg-white/5 border border-white/10 p-10 rounded-[2.5rem] hover:bg-white hover:text-slate-900 transition-all duration-500 cursor-default"
+        {menuOpen && (
+          <div className="border-t border-[#E6E1E1] bg-[#F8F8F8] px-5 py-5 md:hidden">
+            <div className="flex flex-col gap-4">
+              {t.nav.map(([label, href]) => (
+                <a
+                  key={label}
+                  href={label === 'Blog' ? (isBlogRoute ? blogHref : '#blog') : sectionHref(href)}
+                  className="text-lg font-semibold"
+                  onClick={() => setMenuOpen(false)}
                 >
-                  <div className="w-16 h-16 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center mb-8 group-hover:bg-rose-600 group-hover:text-white transition-all duration-500">
-                    <Icon className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-2xl font-serif font-bold mb-4">{item.title}</h3>
-                  <p className="text-slate-400 group-hover:text-slate-600 leading-relaxed text-sm">{item.desc}</p>
+                  {label}
+                </a>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setLang(lang === 'es' ? 'en' : 'es');
+                  setMenuOpen(false);
+                }}
+                className="w-fit rounded-md border border-[#D9D5D5] px-3 py-2 text-xs font-bold uppercase tracking-[0.18em]"
+              >
+                {lang === 'es' ? 'English' : 'Español'}
+              </button>
+            </div>
+          </div>
+        )}
+      </header>
+
+      {isBlogPost ? (
+        <main className="pt-32">
+          <article className="mx-auto max-w-4xl px-5 pb-24 pt-10 md:px-8 md:pb-32">
+            <a href={blogHref} className="inline-flex items-center gap-2 py-2 text-sm font-bold text-[#5F5F5F] transition hover:text-[#272829]">
+              <ChevronRight className="rotate-180" size={16} />
+              {lang === 'es' ? 'Volver al blog' : 'Back to blog'}
+            </a>
+            <p className="mt-10 text-sm font-bold uppercase tracking-[0.18em] text-[#6A8390]">
+              {currentBlogPost.fields[`category${fieldSuffix}`]}
+            </p>
+            <h1 className="mt-4 text-5xl font-black leading-tight text-[#272829] md:text-7xl">
+              {currentBlogPost.fields[`title${fieldSuffix}`]}
+            </h1>
+            <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-base font-semibold text-[#6A8390]">
+              <time dateTime={currentBlogPost.fields.date}>
+                {dateFormatter.format(new Date(`${currentBlogPost.fields.date}T00:00:00`))}
+              </time>
+              <span aria-hidden="true">·</span>
+              <span>{currentBlogPost.fields[`readTime${fieldSuffix}`]}</span>
+            </div>
+            <div className="mt-8">
+              <BlogAuthorByline author={currentBlogPost.author} lang={lang} />
+            </div>
+            <p className="mt-8 text-xl leading-9 text-[#5F5F5F]">
+              {currentBlogPost.fields[`excerpt${fieldSuffix}`]}
+            </p>
+            {currentBlogPost.fields.cover ? (
+              <figure className="mt-10 overflow-hidden rounded-md border border-[#E2DDDD] bg-[#F1F1F1]">
+                <img
+                  src={asset(currentBlogPost.fields.cover)}
+                  alt={currentBlogPost.fields[`coverAlt${fieldSuffix}`] || currentBlogPost.fields[`title${fieldSuffix}`]}
+                  className="aspect-[16/9] h-auto w-full object-cover"
+                />
+              </figure>
+            ) : null}
+            <div className="mt-12 border-t border-[#E2DDDD] pt-4">
+              {BlogContent ? <BlogContent components={mdxComponents} /> : null}
+            </div>
+            <footer className="mt-12 rounded-md border border-[#E2DDDD] bg-white p-6">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#6A8390]">{t.blog.writtenBy}</p>
+              <BlogAuthorByline author={currentBlogPost.author} lang={lang} size="lg" className="mt-4" />
+            </footer>
+            <div className="mt-8 rounded-md border border-[#DDE8EC] bg-[#F4FAFC] p-6">
+              <h2 className="text-2xl font-black leading-tight">
+                {lang === 'es' ? 'Agenda una evaluación especializada' : 'Book a specialized evaluation'}
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-[#5F5F5F]">
+                {lang === 'es'
+                  ? 'La información del blog es orientativa. La indicación final depende de tu historia clínica y de la evaluación médica.'
+                  : 'Blog information is for general guidance. The final indication depends on your clinical history and medical evaluation.'}
+              </p>
+              <a href={`${BASE}#agendar`} className="mt-5 inline-flex items-center gap-2 rounded-md bg-[#272829] px-5 py-3 text-sm font-bold text-white transition hover:bg-black">
+                {t.hero.primary}
+                <ChevronRight size={16} />
+              </a>
+            </div>
+          </article>
+        </main>
+      ) : isBlogIndex ? (
+        <main className="pt-32">
+          <BlogIndexPage
+            posts={blogPosts}
+            lang={lang}
+            fieldSuffix={fieldSuffix}
+            dateFormatter={dateFormatter}
+            copy={t.blog}
+            backHomeHref={BASE}
+          />
+        </main>
+      ) : (
+        <main id="inicio">
+        <HeroSection t={t} lang={lang} heroTitleIndex={heroTitleIndex} />
+
+        <section className="border-y border-[#E5E0E0] bg-white">
+          <div className="mx-auto grid max-w-7xl gap-px bg-[#E5E0E0] px-0 md:grid-cols-3">
+            {t.trust.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.value} data-reveal className="bg-white px-6 py-8 md:px-8">
+                  <Icon className="mb-5 text-[#272829]" size={26} strokeWidth={1.8} />
+                  <h2 className="text-lg font-black">{item.value}</h2>
+                  <p className="mt-2 text-sm leading-6 text-[#6D6D6D]">{item.label}</p>
                 </div>
               );
             })}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* --- Doctor Spotlight --- */}
-      <section id="especialista" className="py-32 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-20 items-center">
-            <div className="order-2 lg:order-1 relative">
-              <div className="aspect-square rounded-[3rem] overflow-hidden shadow-2xl relative max-w-lg">
-                <img src={doctorHero} alt={t.doctor.name} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-rose-600/10 mix-blend-multiply" />
-              </div>
-              <div className="absolute -bottom-10 -right-10 bg-white p-10 rounded-[2.5rem] shadow-2xl border border-slate-50 max-w-xs hidden md:block">
-                <Award className="text-rose-500 w-12 h-12 mb-4" />
-                <h4 className="font-bold text-lg mb-1">Fetal Medicine Foundation</h4>
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">
-                  {lang === 'es' ? 'Londres, UK - Certificación' : 'London, UK - Certification'}
-                </p>
-              </div>
+        <section id="servicios" className="relative z-0 isolate overflow-x-clip bg-[#F8F8F8] py-24 md:py-32">
+          <div className="mx-auto max-w-7xl px-5 md:px-8">
+            <div data-reveal className="max-w-3xl">
+              <h2 className="text-4xl font-black leading-tight md:text-6xl">{t.services.title}</h2>
+              <p className="mt-5 text-lg leading-8 text-[#5F5F5F]">{t.services.subtitle}</p>
             </div>
 
-            <div className="order-1 lg:order-2 space-y-8">
-              <div className="inline-block text-rose-600 font-bold text-xs uppercase tracking-[0.3em]">
-                {t.doctor.tag}
-              </div>
-              <h2 className="text-5xl lg:text-6xl font-serif font-bold text-slate-900">{t.doctor.name}</h2>
-              <div className="text-xl font-bold text-slate-400 italic">{t.doctor.role}</div>
-              <p className="text-xl text-slate-500 leading-relaxed font-medium">{t.doctor.bio}</p>
-              <div className="space-y-4 pt-4">
-                {t.doctor.features.map((f, i) => (
-                  <div key={i} className="flex items-center gap-4">
-                    <div className="w-6 h-6 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center shrink-0">
-                      <CheckCircle2 size={16} />
-                    </div>
-                    <span className="font-bold text-slate-700 tracking-tight">{f}</span>
+            <div className="mt-6">
+              <p className="text-center text-xs font-bold uppercase tracking-[0.18em] text-[#A1A0A1] lg:hidden">
+                {lang === 'es' ? 'Desliza para explorar cada estudio' : 'Swipe to explore each study'}
+              </p>
+              <p className="hidden text-center text-xs font-bold uppercase tracking-[0.18em] text-[#A1A0A1] lg:block">
+                {lang === 'es' ? 'Toca una tarjeta para ver el detalle' : 'Tap a card to see details'}
+              </p>
+              <RotatedServiceCards
+                items={t.services.items.map((service, index) => ({ ...service, image: studyImages[index] }))}
+              />
+            </div>
+
+            <div data-reveal className="mt-8 rounded-md border border-[#E2DDDD] bg-white p-6 md:p-8">
+              <h3 className="text-2xl font-black leading-tight">{t.services.moreTitle}</h3>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {t.services.moreItems.map((item) => (
+                  <div key={item} className="flex items-start gap-3 rounded-md bg-[#F8F8F8] px-4 py-3 text-sm font-bold leading-6 text-[#3E3F40]">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#A1C7D8]" />
+                    <span>{item}</span>
                   </div>
                 ))}
               </div>
-              <button className="pt-6 flex items-center gap-3 text-rose-600 font-bold text-lg hover:gap-5 transition-all group">
-                {lang === 'es' ? 'Ver Currículum Completo' : 'View Full Curriculum'}
-                <ChevronRight className="group-hover:translate-x-2 transition-transform" />
-              </button>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section id="tecnología" className="py-24 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="bg-slate-900 rounded-[3rem] p-12 md:p-20 relative text-white overflow-hidden">
-            <div className="absolute top-0 right-0 w-1/2 h-full opacity-10 pointer-events-none">
-              <svg viewBox="0 0 100 100" className="w-full h-full">
-                <circle cx="50" cy="50" r="40" stroke="white" strokeWidth="0.5" fill="none" />
-                <circle cx="50" cy="50" r="30" stroke="white" strokeWidth="0.5" fill="none" />
-                <path d="M50 10 L50 90 M10 50 L90 50" stroke="white" strokeWidth="0.2" />
-              </svg>
+        <section id="tecnologia" className="border-y border-[#E5E0E0] bg-white py-24 md:py-32">
+          <div className="mx-auto max-w-7xl px-5 md:px-8">
+            <div data-reveal className="mx-auto max-w-4xl text-center">
+                <h2 className="text-4xl font-black leading-tight md:text-6xl">{t.technology.title}</h2>
+              <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-[#5F5F5F]">{t.technology.subtitle}</p>
             </div>
-            <div className="relative z-10 max-w-2xl">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="h-px w-12 bg-rose-500" />
-                <span className="text-rose-400 font-bold uppercase tracking-widest text-sm">
-                  {lang === 'es' ? 'Innovación' : 'Innovation'}
-                </span>
-              </div>
-              <h2 className="text-4xl md:text-6xl font-serif mb-8">{t.tech.title}</h2>
-              <p className="text-xl text-slate-300 mb-10 leading-relaxed">{t.tech.desc}</p>
-              <div className="grid sm:grid-cols-2 gap-6 mb-12">
-                {t.tech.features.map((f) => (
-                  <div key={f} className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-full bg-rose-500/20 flex items-center justify-center text-rose-400">
-                      <ShieldCheck size={14} />
-                    </div>
-                    <span className="font-medium">{f}</span>
-                  </div>
-                ))}
-              </div>
-              <button className="bg-white text-slate-900 px-10 py-4 rounded-xl font-bold hover:bg-slate-100 transition-all flex items-center gap-2">
-                {lang === 'es' ? 'Explorar Tecnología' : 'Explore Technology'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <section className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-1.5 text-xs font-semibold tracking-[0.18em] uppercase text-slate-500">
-              <Smartphone size={14} />
-              <span>{lang === 'es' ? 'App móvil CEHMEFE' : 'CEHMEFE Mobile App'}</span>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-serif">{t.app.title}</h2>
-            <p className="text-slate-600 text-sm md:text-base leading-relaxed">{t.app.subtitle}</p>
-            <ul className="space-y-2 text-sm text-slate-600">
-              {t.app.bullets.map((item) => (
-                <li key={item} className="flex gap-2">
-                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-rose-500 shrink-0" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="flex flex-wrap gap-4 pt-2">
-              <button className="flex items-center gap-3 rounded-xl bg-slate-900 px-5 py-3 text-left text-white shadow-md hover:bg-slate-800 transition-colors">
-                <Smartphone size={22} />
-                <div className="leading-tight">
-                  <div className="text-[10px] uppercase tracking-[0.16em] text-slate-300">
-                    {lang === 'es' ? 'Muy pronto en' : 'Coming soon on'}
-                  </div>
-                  <div className="text-sm font-semibold">Google Play</div>
-                </div>
-              </button>
-              <button className="flex items-center gap-3 rounded-xl border border-slate-200 px-5 py-3 text-left text-slate-900 hover:bg-slate-50 transition-colors">
-                <Apple size={22} />
-                <div className="leading-tight">
-                  <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
-                    {lang === 'es' ? 'Muy pronto en' : 'Coming soon on'}
-                  </div>
-                  <div className="text-sm font-semibold">App Store</div>
-                </div>
-              </button>
-            </div>
-            <p className="text-xs text-slate-400">
-              {lang === 'es'
-                ? 'La app estará disponible para pacientes CEHMEFE. Te avisaremos en tu próxima cita.'
-                : 'The app will be available for CEHMEFE patients. We will notify you during your visit.'}
-            </p>
-          </div>
-          <div className="relative">
-            <div className="mx-auto aspect-[9/18] w-full max-w-xs rounded-[2.2rem] bg-slate-900 p-3 shadow-2xl">
-              <div className="h-full w-full rounded-[1.8rem] bg-gradient-to-b from-rose-100 via-white to-slate-100 p-5 flex flex-col justify-between">
-                <div className="flex items-center justify-between text-[10px] text-slate-500">
-                  <span>CEHMEFE</span>
-                  <span>{lang === 'es' ? 'Próximo control' : 'Next checkup'}</span>
-                </div>
-                <div className="space-y-4">
-                  <p className="text-xs font-semibold text-slate-900">
-                    {lang === 'es'
-                      ? 'Tu embarazo, organizado en un solo lugar.'
-                      : 'Your pregnancy, organized in one place.'}
-                  </p>
-                  <div className="space-y-2 text-[11px] text-slate-700">
-                    <div className="flex items-center justify-between rounded-xl bg-white/80 px-3 py-2">
-                      <span>{lang === 'es' ? 'Control trimestral' : 'Trimester visit'}</span>
-                      <span className="text-[10px] font-semibold text-rose-600">08:30</span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-xl bg-white/80 px-3 py-2">
-                      <span>{lang === 'es' ? 'Ultrasonido morfológico' : 'Morphology scan'}</span>
-                      <span className="text-[10px] font-semibold text-emerald-600">
-                        {lang === 'es' ? 'Semana 20' : 'Week 20'}
-                      </span>
-                    </div>
+            <div data-reveal style={{ '--reveal-delay': '120ms' }} className="mt-12 overflow-hidden rounded-md border border-[#E2DDDD] bg-[#F4F4F4]">
+              <div className="relative md:aspect-[2881/1600]">
+                <div className="relative z-10 p-6 sm:p-8 md:absolute md:inset-y-0 md:left-0 md:flex md:w-[43%] md:items-center md:p-12 lg:p-16">
+                  <div className="max-w-md rounded-md bg-white p-5 shadow-[0_18px_45px_-32px_rgba(0,0,0,0.45)] md:bg-transparent md:p-0 md:shadow-none">
+                    <h3 className="text-4xl font-black leading-tight text-[#272829] md:text-5xl">{t.technology.model}</h3>
+                    <p className="mt-4 text-2xl font-medium leading-tight text-[#272829] md:text-3xl">{t.technology.tagline}</p>
+                    <p className="mt-5 text-sm leading-7 text-[#5F5F5F] md:text-base">{t.technology.modelText}</p>
                   </div>
                 </div>
-                <div className="flex items-center justify-between text-[10px] text-slate-500">
-                  <span>{lang === 'es' ? 'Recordatorios suaves' : 'Gentle reminders'}</span>
-                  <span>{lang === 'es' ? 'Seguimiento seguro' : 'Safe follow-up'}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-24 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16 space-y-4">
-            <h2 className="text-4xl font-serif">{t.testimonials.title}</h2>
-            <p className="text-slate-500 max-w-2xl mx-auto text-sm md:text-base">
-              {t.testimonials.subtitle}
-            </p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {t.testimonials.items.map((tm) => (
-              <div
-                key={tm.name}
-                className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all"
-              >
-                <div className="flex items-center gap-4 mb-6">
+                <picture>
+                  <source media="(max-width: 767px)" srcSet={images.heraMobile} />
                   <img
-                    src={tm.image}
-                    alt={tm.name}
-                    className="w-14 h-14 rounded-full object-cover"
+                    src={images.heraDesktop}
+                    alt={t.technology.imageAlt}
+                    className="h-auto w-full md:absolute md:inset-0 md:z-0 md:h-full md:object-cover"
                     loading="lazy"
                   />
-                  <div>
-                    <p className="font-semibold text-slate-900">{tm.name}</p>
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
-                      {tm.role}
-                    </p>
-                  </div>
-                </div>
-                <p className="text-slate-600 text-sm leading-relaxed">“{tm.quote}”</p>
+                </picture>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+            </div>
 
-      <section className="py-24 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-[minmax(0,1.1fr),minmax(0,0.9fr)] gap-12 items-start">
-            <div className="space-y-6">
-              <div className="inline-flex items-center gap-2 rounded-full bg-rose-50 px-4 py-1.5 text-xs font-semibold tracking-[0.18em] uppercase text-rose-600">
-                <MessageCircle size={14} />
-                <span>{lang === 'es' ? 'Chatbot próximamente' : 'Chatbot coming soon'}</span>
+            <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {t.technology.features.map((feature) => {
+                return (
+                  <article key={feature.title} data-reveal className="rounded-md border border-[#E2DDDD] bg-white p-5">
+                    <h3 className="text-lg font-black leading-tight">{feature.title}</h3>
+                    <p className="mt-3 text-sm leading-6 text-[#656565]">{feature.desc}</p>
+                  </article>
+                );
+              })}
+            </div>
+
+            {false && (
+            <section data-reveal className="mt-14 rounded-md border border-[#DDE8EC] bg-[#F4FAFC] p-6 md:p-10">
+              <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+                <div>
+                  <h3 className="text-4xl font-black leading-tight md:text-5xl">
+                    {t.technology.accessibilityHighlight.title}
+                  </h3>
+                  <p className="mt-6 text-lg leading-8 text-[#4F5960]">
+                    {t.technology.accessibilityHighlight.body}
+                  </p>
+                </div>
+
+                <div className="overflow-hidden rounded-md border border-[#CFE0E7] bg-white p-4">
+                  <img
+                    src={images.tactileModel}
+                    alt={lang === 'es' ? 'Ilustración de ultrasonido 3D convertido en modelo táctil' : 'Illustration of 3D ultrasound converted into a tactile model'}
+                    className="h-auto w-full"
+                    loading="lazy"
+                  />
+                </div>
               </div>
-              <h2 className="text-3xl md:text-4xl font-serif">{t.faq.title}</h2>
-              <p className="text-slate-600 text-sm md:text-base leading-relaxed">
-                {t.faq.subtitle}
-              </p>
-              <div className="space-y-4 pt-4">
-                {t.faq.questions.map((item) => (
-                  <div
-                    key={item.q}
-                    className="rounded-2xl border border-slate-100 bg-white px-5 py-4 shadow-sm"
+            </section>
+            )}
+          </div>
+        </section>
+
+        <section id="especialista" className="bg-white py-24 md:py-32">
+          <div className="mx-auto grid max-w-7xl gap-12 px-5 md:px-8 lg:grid-cols-[0.78fr_1fr] lg:items-center">
+            <div data-reveal className="overflow-hidden rounded-md border border-[#E5E0E0]">
+              <img src={images.portrait} alt={t.specialist.name} className="h-full min-h-[480px] w-full object-cover md:min-h-[560px]" />
+            </div>
+
+            <div data-reveal style={{ '--reveal-delay': '140ms' }}>
+              <h2 className="text-4xl font-black leading-tight md:text-6xl">{t.specialist.name}</h2>
+              <p className="mt-3 text-lg font-semibold text-[#777]">{t.specialist.role}</p>
+              <p className="mt-7 max-w-2xl text-lg leading-8 text-[#5F5F5F]">{t.specialist.body}</p>
+              <p className="mt-8 text-sm font-black uppercase tracking-[0.14em] text-[#6A8390]">{t.specialist.credentialsLabel}</p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {t.specialist.points.map((point, index) => {
+                  const Icon = specialtyIcons[index % specialtyIcons.length];
+                  return (
+                    <div
+                      key={point}
+                      className={`flex items-center gap-3 rounded-md border px-4 py-4 text-sm font-bold ${specialtyStyles[index % specialtyStyles.length]}`}
+                    >
+                      <Icon size={20} strokeWidth={1.9} className="shrink-0" />
+                      <span>{point}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="blog" className="border-y border-[#E5E0E0] bg-white py-24 md:py-32">
+          <div className="mx-auto max-w-7xl px-5 md:px-8">
+            <div data-reveal className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+              <div className="max-w-3xl">
+                <h2 className="text-4xl font-black leading-tight md:text-6xl">{t.blog.title}</h2>
+                <p className="mt-6 text-lg leading-8 text-[#5F5F5F]">{t.blog.subtitle}</p>
+              </div>
+              <a
+                href={blogHref}
+                className="inline-flex shrink-0 items-center gap-2 self-start rounded-md border border-[#CFCACA] px-4 py-3 text-sm font-bold text-[#272829] transition hover:border-[#272829] hover:bg-[#F8F8F8] md:self-auto"
+              >
+                {t.blog.viewAll}
+                <ChevronRight size={16} />
+              </a>
+            </div>
+          </div>
+
+          <div data-reveal className="mt-12">
+            <p className="mb-4 px-5 text-xs font-bold uppercase tracking-[0.18em] text-[#A1A0A1] md:px-8 lg:mx-auto lg:max-w-7xl lg:px-8">
+              {lang === 'es' ? 'Desliza para ver más artículos' : 'Swipe to see more articles'}
+            </p>
+            <div className="blog-gallery flex items-stretch snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-2 md:px-8 lg:mx-auto lg:max-w-7xl lg:px-8">
+              {featuredBlogPosts.map((post) => (
+                <BlogPostCard
+                  key={post.slug}
+                  post={post}
+                  lang={lang}
+                  fieldSuffix={fieldSuffix}
+                  dateFormatter={dateFormatter}
+                  readMoreLabel={t.blog.readMore}
+                  compact
+                  className="w-[min(84vw,340px)] shrink-0 snap-start self-stretch"
+                />
+              ))}
+            </div>
+            <div className="mt-8 flex justify-center px-5 md:px-8">
+              <a
+                href={blogHref}
+                className="inline-flex items-center gap-2 rounded-md bg-[#272829] px-5 py-3 text-sm font-bold text-white transition hover:bg-black"
+              >
+                {t.blog.viewAll}
+                <ChevronRight size={16} />
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-y border-[#E5E0E0] bg-[#F8F8F8] py-24 md:py-32">
+          <div className="mx-auto max-w-7xl px-5 md:px-8">
+            <div data-reveal className="mx-auto max-w-4xl text-center">
+              <h2 className="text-4xl font-black leading-tight md:text-6xl">{t.guide.title}</h2>
+              <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-[#5F5F5F]">{t.guide.subtitle}</p>
+            </div>
+
+            <p data-reveal style={{ '--reveal-delay': '100ms' }} className="mx-auto mt-8 max-w-3xl text-center text-sm font-semibold leading-7 text-[#4F5960]">
+              {t.guide.note}
+            </p>
+
+            <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+              {t.guide.items.map((item, index) => {
+                const GuideIcon = guideIcons[index % guideIcons.length];
+                return (
+                <article key={item.range} data-reveal style={{ '--reveal-delay': `${index * 70}ms` }} className="rounded-md border border-[#E2DDDD] bg-white p-6">
+                  <div className={`mb-7 flex h-14 w-14 items-center justify-center rounded-full ${guideIconStyles[index % guideIconStyles.length]}`}>
+                    <GuideIcon size={26} strokeWidth={1.8} />
+                  </div>
+                  <p className="text-sm font-black text-[#6A8390]">{item.range}</p>
+                  <h3 className="mt-3 text-xl font-black leading-tight">{item.title}</h3>
+                  <p className="mt-4 text-sm leading-6 text-[#656565]">{item.desc}</p>
+                </article>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section id="agendar" className="relative overflow-hidden py-20 md:py-24">
+          <img
+            src={images.office}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-[#272829]/80" />
+          <div className="relative z-10 mx-auto max-w-7xl px-5 md:px-8">
+            <div className="grid items-start gap-12 lg:grid-cols-[0.9fr_1fr]">
+              <div data-reveal>
+                <h2 className="text-4xl font-black leading-tight text-white md:text-6xl">{t.appointment.title}</h2>
+                <p className="mt-6 max-w-xl text-lg leading-8 text-white/85">{t.appointment.subtitle}</p>
+                <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                  <a
+                    href="https://wa.me/50431680805"
+                    className="inline-flex items-center justify-center gap-2 rounded-md bg-white px-6 py-4 text-sm font-bold text-[#272829] transition hover:bg-[#F6F1F1]"
                   >
-                    <p className="text-sm font-semibold text-slate-900 mb-1">{item.q}</p>
-                    <p className="text-sm text-slate-600">{item.a}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="rounded-3xl bg-white p-6 shadow-lg border border-slate-100">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center">
                     <MessageCircle size={18} />
-                  </div>
-                  <div className="leading-tight">
-                    <p className="text-xs font-semibold text-slate-900">
-                      {lang === 'es' ? 'Asistente CEHMEFE IA' : 'CEHMEFE AI Assistant'}
-                    </p>
-                    <p className="text-[10px] text-slate-400">
-                      {lang === 'es' ? 'Versión demo · Respuestas de muestra' : 'Demo · Sample answers'}
-                    </p>
-                  </div>
-                </div>
-                <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
-                  {lang === 'es' ? 'Próximamente' : 'Soon'}
-                </span>
-              </div>
-              <div className="space-y-3 text-sm">
-                <div className="flex gap-2">
-                  <div className="mt-1 h-6 w-6 rounded-full bg-slate-200" />
-                  <div className="rounded-2xl bg-slate-100 px-3 py-2 text-slate-800 max-w-[80%]">
-                    {lang === 'es'
-                      ? '¿Qué debo traer a mi primera cita de ultrasonido?'
-                      : 'What should I bring to my first ultrasound visit?'}
-                  </div>
-                </div>
-                <div className="flex gap-2 justify-end">
-                  <div className="rounded-2xl bg-rose-600 px-3 py-2 text-white text-sm max-w-[80%]">
-                    {lang === 'es'
-                      ? 'Por ahora esta es una vista de ejemplo. Pronto podrás chatear en tiempo real con un asistente entrenado por la Dra. Mónica.'
-                      : 'For now this is a sample preview. Soon you will chat in real time with an assistant trained by Dr. Monica.'}
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <div className="mt-1 h-6 w-6 rounded-full bg-slate-200" />
-                  <div className="rounded-2xl bg-slate-100 px-3 py-2 text-slate-800 max-w-[80%]">
-                    {lang === 'es'
-                      ? '¿El ultrasonido 3D/4D necesita alguna preparación especial?'
-                      : 'Do I need any special preparation for a 3D/4D ultrasound?'}
-                  </div>
+                    {t.appointment.whatsapp} +504 3168-0805
+                  </a>
+                  <a
+                    href="tel:+50431680805"
+                    className="inline-flex items-center justify-center gap-2 rounded-md border border-white/60 px-6 py-4 text-sm font-bold text-white transition hover:border-white hover:bg-white/10"
+                  >
+                    <Phone size={18} />
+                    {t.appointment.call} +504 3168-0805
+                  </a>
                 </div>
               </div>
+
+              <div data-reveal style={{ '--reveal-delay': '120ms' }} className="rounded-md border border-[#DDD8D8] bg-white p-7 shadow-[0_20px_50px_-35px_rgba(0,0,0,0.35)] md:p-9">
+                <div className="grid gap-8 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <h3 className="text-lg font-black text-[#272829]">{lang === 'es' ? 'Dirección' : 'Address'}</h3>
+                    <p className="mt-2 leading-7 text-[#5F5F5F]">{t.appointment.address}</p>
+                    <a
+                      href="https://www.google.com/maps/search/?api=1&query=Nuevos%20Horizontes%20Business%20Center%20San%20Pedro%20Sula%20Honduras"
+                      className="mt-3 inline-flex items-center gap-2 py-2 text-sm font-bold text-[#272829] underline underline-offset-4"
+                    >
+                      {t.appointment.directions}
+                      <ChevronRight size={15} />
+                    </a>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-black text-[#272829]">{lang === 'es' ? 'Horario' : 'Hours'}</h3>
+                    <div className="mt-2 flex items-start gap-3 text-[#5F5F5F]">
+                      <Clock className="mt-1 shrink-0 text-[#272829]" size={18} />
+                      <p className="leading-7">{t.appointment.hours}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-black text-[#272829]">{lang === 'es' ? 'Correo' : 'Email'}</h3>
+                    <div className="mt-2 flex items-start gap-3 text-[#5F5F5F]">
+                      <Mail className="mt-1 shrink-0 text-[#272829]" size={18} />
+                      <a href="mailto:info@cehmefe.com" className="inline-block py-1 leading-7 hover:text-[#272829]">{t.appointment.email}</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div data-reveal className="mt-14 overflow-hidden rounded-md border border-[#DDD8D8] bg-white">
+              <iframe
+                title="CEHMEFE location map"
+                src="https://www.google.com/maps?q=Nuevos%20Horizontes%20Business%20Center%20San%20Pedro%20Sula%20Honduras&output=embed"
+                className="h-[340px] w-full border-0 md:h-[420px]"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
             </div>
           </div>
-          <p className="mt-8 text-center text-xs text-slate-400 max-w-3xl mx-auto">
-            {t.faq.note}
-          </p>
-        </div>
-      </section>
+        </section>
+        </main>
+      )}
 
-      {/* --- Contact & Location --- */}
-      <section id="citas" className="py-32 bg-slate-50 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12">
-          <div className="bg-white p-12 lg:p-16 rounded-[3rem] shadow-xl shadow-slate-200/50">
-            <h2 className="text-4xl font-serif font-bold mb-10">
-              {lang === 'es' ? 'Reserva tu Espacio' : 'Book Your Space'}
-            </h2>
-            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 px-1">
-                    {lang === 'es' ? 'Nombre Completo' : 'Full Name'}
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full bg-slate-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-rose-500 transition-all"
-                    placeholder={lang === 'es' ? 'Ej. Ana Pérez' : 'e.g. Jane Doe'}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 px-1">
-                    {lang === 'es' ? 'Teléfono' : 'Phone'}
-                  </label>
-                  <input
-                    type="tel"
-                    className="w-full bg-slate-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-rose-500 transition-all"
-                    placeholder="+504"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 px-1">
-                  {lang === 'es' ? 'Tipo de Servicio' : 'Service Type'}
-                </label>
-                <select className="w-full bg-slate-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-rose-500 transition-all appearance-none">
-                  <option>{lang === 'es' ? 'Selecciona un servicio' : 'Select a service'}</option>
-                  {t.services.items.map((item, i) => (
-                    <option key={i}>{item.title}</option>
-                  ))}
-                </select>
-              </div>
-              <button className="w-full bg-rose-600 text-white font-bold py-5 rounded-2xl hover:bg-rose-700 transition-all shadow-xl shadow-rose-200">
-                {lang === 'es' ? 'Confirmar Solicitud' : 'Confirm Request'}
-              </button>
-            </form>
+      <footer className="border-t border-[#E5E0E0] bg-white">
+        <div className="mx-auto grid max-w-7xl gap-12 px-5 py-14 md:grid-cols-[1.15fr_1fr_0.8fr] md:px-8 md:py-20">
+          <div data-reveal>
+            <img src={logo} alt="CEHMEFE" className="h-28 w-28 object-contain" />
+            <p className="mt-6 max-w-sm text-sm leading-7 text-[#666]">{t.footer.description}</p>
+            <a
+              href="https://wa.me/50431680805"
+              className="mt-7 inline-flex items-center gap-2 rounded-md bg-[#272829] px-5 py-3 text-sm font-bold text-white transition hover:bg-black"
+            >
+              <MessageCircle size={17} />
+              {t.hero.primary}
+            </a>
           </div>
 
-          <div className="flex flex-col justify-between py-8">
-            <div className="space-y-10">
-              <div className="flex gap-6 items-start group">
-                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-rose-500 shadow-sm shrink-0 group-hover:scale-110 transition-transform">
-                  <MapPin size={28} />
-                </div>
-                <div>
-                  <h4 className="font-bold text-xl mb-2">{lang === 'es' ? 'Ubicación' : 'Location'}</h4>
-                  <p className="text-slate-500 leading-relaxed font-medium">
-                    Nivel 15, Suite 1503
-                    <br />
-                    Nuevos Horizontes Business Center
-                    <br />
-                    San Pedro Sula, Honduras.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-6 items-start group">
-                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-rose-500 shadow-sm shrink-0 group-hover:scale-110 transition-transform">
-                  <Phone size={28} />
-                </div>
-                <div>
-                  <h4 className="font-bold text-xl mb-2">{lang === 'es' ? 'Contacto Directo' : 'Direct Contact'}</h4>
-                  <p className="text-slate-500 leading-relaxed font-medium">
-                    +504 9440-1234
-                    <br />
-                    info@cehmefe.com
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-6 items-start group">
-                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-rose-500 shadow-sm shrink-0 group-hover:scale-110 transition-transform">
-                  <Instagram size={28} />
-                </div>
-                <div>
-                  <h4 className="font-bold text-xl mb-2">{lang === 'es' ? 'Síguenos' : 'Follow Us'}</h4>
-                  <p className="text-slate-500 leading-relaxed font-medium">@cehmefe_fetalmed</p>
-                </div>
-              </div>
+          <div data-reveal style={{ '--reveal-delay': '90ms' }}>
+            <h2 className="text-xl font-black text-[#272829]">{t.footer.contact}</h2>
+            <div className="mt-6 space-y-5 text-sm leading-6 text-[#666]">
+              <p className="flex gap-3">
+                <MapPin className="mt-1 shrink-0 text-[#272829]" size={18} />
+                <span>{t.appointment.address}</span>
+              </p>
+              <p className="flex gap-3">
+                <Phone className="mt-1 shrink-0 text-[#272829]" size={18} />
+                <a href="tel:+50431680805" className="inline-block py-1.5 hover:text-[#272829]">+504 3168-0805</a>
+              </p>
+              <p className="flex gap-3">
+                <Mail className="mt-1 shrink-0 text-[#272829]" size={18} />
+                <a href="mailto:info@cehmefe.com" className="inline-block py-1.5 hover:text-[#272829]">info@cehmefe.com</a>
+              </p>
             </div>
+          </div>
 
-            <div className="pt-12">
-              <div className="bg-slate-900 text-white p-8 rounded-[2.5rem] flex items-center justify-between">
-                <div>
-                  <div className="text-rose-400 text-xs font-bold uppercase tracking-widest mb-1">
-                    {lang === 'es' ? 'Soporte Médico' : 'Medical Support'}
-                  </div>
-                  <div className="text-lg font-bold">
-                    {lang === 'es' ? 'Asistente IA Disponible' : 'AI Assistant Available'}
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowAIChat(true)}
-                  className="bg-white text-slate-900 w-12 h-12 rounded-full flex items-center justify-center hover:scale-110 transition-all"
-                >
-                  <BrainCircuit size={20} />
-                </button>
-              </div>
-            </div>
+          <div data-reveal style={{ '--reveal-delay': '180ms' }}>
+            <h2 className="text-xl font-black text-[#272829]">{t.footer.links}</h2>
+            <nav className="mt-6 flex flex-col gap-1 text-sm font-semibold text-[#666] [&>a]:py-2">
+              <a href={sectionHref('#servicios')} className="hover:text-[#272829]">{lang === 'es' ? 'Servicios' : 'Services'}</a>
+              <a href={sectionHref('#tecnologia')} className="hover:text-[#272829]">{lang === 'es' ? 'Tecnología' : 'Technology'}</a>
+              <a href={sectionHref('#especialista')} className="hover:text-[#272829]">{lang === 'es' ? 'Especialista' : 'Specialist'}</a>
+              <a href={blogHref} className="hover:text-[#272829]">Blog</a>
+              <a href={sectionHref('#agendar')} className="hover:text-[#272829]">{lang === 'es' ? 'Agendar cita' : 'Book appointment'}</a>
+              <a
+                className="inline-flex items-center gap-2 hover:text-[#272829]"
+                href="https://www.instagram.com/cehmefe"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Instagram size={17} />
+                @cehmefe
+              </a>
+            </nav>
           </div>
         </div>
-      </section>
 
-      {/* --- Footer --- */}
-      <footer className="bg-white pt-24 pb-12 border-t border-slate-100">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-12 pb-16">
-            <CehmefeLogo className="h-12 w-auto" />
-            <div className="flex gap-12 font-bold text-[13px] uppercase tracking-widest text-slate-400">
-              <a href="#servicios" className="hover:text-rose-600 transition-colors">
-                {lang === 'es' ? 'Servicios' : 'Services'}
-              </a>
-              <a href="#tecnología" className="hover:text-rose-600 transition-colors">
-                {lang === 'es' ? 'Tecnología' : 'Technology'}
-              </a>
-              <a href="#" className="hover:text-rose-600 transition-colors">Blog</a>
-              <a href="#" className="hover:text-rose-600 transition-colors">
-                {lang === 'es' ? 'Portal Pacientes' : 'Patient Portal'}
-              </a>
-            </div>
-          </div>
-          <div className="flex flex-col md:flex-row justify-between gap-6 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 pt-12 border-t border-slate-50">
+        <div className="border-t border-[#E5E0E0]">
+          <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6 text-sm text-[#777] md:flex-row md:items-center md:justify-between md:px-8">
             <p>{t.footer.rights}</p>
-            <div className="flex gap-8">
-              <a href="#" className="hover:text-slate-900 transition-colors">
-                {lang === 'es' ? 'Términos de Servicio' : 'Terms of Service'}
-              </a>
-              <a href="#" className="hover:text-slate-900 transition-colors">
-                {lang === 'es' ? 'Privacidad de Datos' : 'Privacy Policy'}
-              </a>
-            </div>
+            <p>San Pedro Sula, Honduras.</p>
           </div>
         </div>
       </footer>
-
-      {/* --- Floating AI Chat Widget --- */}
-      <div
-        className={`fixed bottom-8 right-8 z-[200] transition-all duration-500 transform ${
-          showAIChat ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0 pointer-events-none'
-        }`}
-      >
-        <div className="bg-white w-[360px] h-[500px] rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-slate-100 overflow-hidden flex flex-col">
-          <div className="bg-slate-900 p-6 text-white flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-rose-500 flex items-center justify-center">
-                <BrainCircuit size={20} />
-              </div>
-              <div>
-                <h4 className="font-bold text-sm">CEHMEFE AI</h4>
-                <div className="flex items-center gap-1 text-[10px] opacity-70">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Online 24/7
-                </div>
-              </div>
-            </div>
-            <button onClick={() => setShowAIChat(false)} className="hover:rotate-90 transition-transform">
-              <X size={20} />
-            </button>
-          </div>
-          <div className="flex-1 p-6 space-y-4 overflow-y-auto bg-slate-50/50 font-medium text-sm">
-            <div className="bg-white p-4 rounded-2xl shadow-sm self-start max-w-[85%] text-slate-600">
-              {lang === 'es'
-                ? 'Hola, soy tu asistente de CEHMEFE. ¿En qué puedo ayudarte hoy con respecto a tu embarazo o citas?'
-                : "Hi, I'm your CEHMEFE assistant. How can I help you today about your pregnancy or appointments?"}
-            </div>
-          </div>
-          <div className="p-4 bg-white border-t border-slate-100">
-            <div className="bg-slate-50 rounded-xl flex items-center px-4 py-2">
-              <input
-                type="text"
-                placeholder={lang === 'es' ? 'Escribe tu duda...' : 'Type your question...'}
-                className="flex-1 bg-transparent border-none text-sm focus:ring-0"
-              />
-              <button className="text-rose-600 font-bold text-xs uppercase p-2">
-                {lang === 'es' ? 'Enviar' : 'Send'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* --- Floating Action Button (Mobile) --- */}
-      {!showAIChat && (
-        <div className="fixed bottom-8 right-8 md:hidden z-[150]">
-          <button
-            onClick={() => setShowAIChat(true)}
-            className="bg-rose-600 text-white w-16 h-16 rounded-full shadow-2xl flex items-center justify-center animate-bounce"
-          >
-            <MessageCircle size={28} />
-          </button>
-        </div>
-      )}
     </div>
   );
-};
+}
 
 export default App;
-
