@@ -34,7 +34,7 @@ const withBase = (path) => `${BASE}${path.replace(/^\//, '')}`;
 
 const logo = asset('Logo/cehmefe-logo.png');
 const images = {
-  hero: asset('doctor-photos/dra-monica-hero.jpg'),
+  hero: asset('doctor-photos/IMG_6047.JPG'),
   portrait: asset('doctor-photos/dra-monica-portrait.jpg'),
   office: asset('doctor-photos/IMG_1988.JPG'),
   consult: asset('doctor-photos/IMG_1992.JPG'),
