@@ -34,7 +34,9 @@ const withBase = (path) => `${BASE}${path.replace(/^\//, '')}`;
 
 const logo = asset('Logo/cehmefe-logo.png');
 const images = {
-  hero: asset('doctor-photos/IMG_6047.JPG'),
+  heroVideoMp4: asset('hero/hero-loop.mp4'),
+  heroVideoWebm: asset('hero/hero-loop.webm'),
+  heroPoster: asset('hero/hero-loop-poster.jpg'),
   portrait: asset('doctor-photos/dra-monica-portrait.jpg'),
   office: asset('doctor-photos/IMG_1988.JPG'),
   consult: asset('doctor-photos/IMG_1992.JPG'),
@@ -300,18 +302,24 @@ function HeroSection({ t, lang, heroTitleIndex }) {
 
   return (
     <section ref={heroRef} className="relative flex min-h-[92vh] items-end overflow-hidden bg-[#272829]">
-      <motion.div
-        style={{ y: imageY, scale: imageScale }}
-        className="absolute inset-y-0 right-0 left-[8%] will-change-transform sm:left-[22%] md:left-[36%] lg:left-[40%]"
-      >
-        <img
-          src={images.hero}
-          alt="Dra. Mónica García, especialista en medicina fetal"
-          className="h-full w-full object-cover object-[center_8%] md:object-[center_6%]"
-        />
+      <motion.div style={{ y: imageY, scale: imageScale }} className="absolute inset-0 will-change-transform">
+        <video
+          className="h-full w-full object-cover"
+          poster={images.heroPoster}
+          autoPlay={!reduceMotion}
+          loop
+          muted
+          playsInline
+          preload="auto"
+          aria-hidden="true"
+        >
+          <source src={images.heroVideoWebm} type="video/webm" />
+          <source src={images.heroVideoMp4} type="video/mp4" />
+        </video>
       </motion.div>
-      <div className="absolute inset-0 bg-gradient-to-r from-[#272829] via-[#272829]/88 to-[#272829]/25 sm:via-[#272829]/75 sm:to-transparent md:via-[#272829]/55" />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#272829]/80 via-transparent to-[#272829]/30" />
+      <div className="absolute inset-0 bg-[#272829]/45" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#272829]/90 via-[#272829]/55 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#272829]/85 via-transparent to-[#272829]/40" />
 
       <motion.div
         style={{ y: contentY }}
