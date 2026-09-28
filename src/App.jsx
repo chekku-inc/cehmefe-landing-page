@@ -34,7 +34,7 @@ const withBase = (path) => `${BASE}${path.replace(/^\//, '')}`;
 
 const logo = asset('Logo/cehmefe-logo.png');
 const images = {
-  heroVideoMp4: asset('hero/hero-loop.mp4'),
+  heroVideoMp4: asset('hero/hero-loop-v2.mp4'),
   heroVideoWebm: asset('hero/hero-loop.webm'),
   heroPoster: asset('hero/hero-loop-poster.jpg'),
   portrait: asset('doctor-photos/dra-monica-portrait.jpg'),
@@ -299,11 +299,28 @@ function HeroSection({ t, lang, heroTitleIndex }) {
   const imageY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [0, 90]);
   const imageScale = useTransform(scrollYProgress, [0, 1], reduceMotion ? [1.04, 1.04] : [1.04, 1.1]);
   const contentY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [0, 50]);
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    // Safari only autoplays when the muted attribute is present, which React doesn't always set.
+    video.muted = true;
+    video.defaultMuted = true;
+    video.setAttribute('muted', '');
+    video.setAttribute('playsinline', '');
+    if (reduceMotion) {
+      video.pause();
+      return;
+    }
+    video.play().catch(() => {});
+  }, [reduceMotion]);
 
   return (
     <section ref={heroRef} className="relative flex min-h-[92vh] items-end overflow-hidden bg-[#272829]">
       <motion.div style={{ y: imageY, scale: imageScale }} className="absolute inset-0 will-change-transform">
         <video
+          ref={videoRef}
           className="h-full w-full object-cover"
           poster={images.heroPoster}
           autoPlay={!reduceMotion}
@@ -313,8 +330,8 @@ function HeroSection({ t, lang, heroTitleIndex }) {
           preload="auto"
           aria-hidden="true"
         >
-          <source src={images.heroVideoWebm} type="video/webm" />
           <source src={images.heroVideoMp4} type="video/mp4" />
+          <source src={images.heroVideoWebm} type="video/webm" />
         </video>
       </motion.div>
       <div className="absolute inset-0 bg-[#272829]/45" />
