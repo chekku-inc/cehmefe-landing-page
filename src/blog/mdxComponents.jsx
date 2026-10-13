@@ -17,6 +17,12 @@ export const mdxComponents = {
   ol: (props) => <ol className="mt-6 list-decimal space-y-3 pl-6 text-lg leading-9 text-[#3F4142]" {...props} />,
   li: (props) => <li className="pl-1" {...props} />,
   strong: (props) => <strong className="font-bold text-[#272829]" {...props} />,
+  blockquote: (props) => (
+    <blockquote
+      className="mt-10 border-l-4 border-[#6A8390] pl-6 font-serif text-2xl italic leading-relaxed text-[#272829] [&>p]:mt-0 [&>p]:text-2xl [&>p]:leading-relaxed [&>p]:text-[#272829]"
+      {...props}
+    />
+  ),
   a: (props) => (
     <a className="font-semibold text-[#6A8390] underline decoration-[#C7D5DB] underline-offset-4 transition hover:text-[#272829]" {...props} />
   ),

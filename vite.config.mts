@@ -32,6 +32,8 @@ export default defineConfig({
         'blog-primer-ultrasonido-embarazo': resolve(rootDir, 'blog/primer-ultrasonido-embarazo/index.html'),
         'blog-tamizaje-primer-trimestre': resolve(rootDir, 'blog/tamizaje-primer-trimestre/index.html'),
         'blog-ultrasonido-morfologia-fetal': resolve(rootDir, 'blog/ultrasonido-morfologia-fetal/index.html'),
+        'blog-gripe-embarazo': resolve(rootDir, 'blog/gripe-embarazo/index.html'),
+        'blog-acretismo-placentario': resolve(rootDir, 'blog/acretismo-placentario/index.html'),
       },
     },
   },

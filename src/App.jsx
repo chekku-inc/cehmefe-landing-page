@@ -878,7 +878,7 @@ function App() {
             <p className="mt-10 text-sm font-bold uppercase tracking-[0.18em] text-[#6A8390]">
               {currentBlogPost.fields[`category${fieldSuffix}`]}
             </p>
-            <h1 className="mt-4 text-5xl font-black leading-tight text-[#272829] md:text-7xl">
+            <h1 className="mt-4 max-w-3xl text-balance text-3xl font-black leading-[1.12] text-[#272829] sm:text-4xl md:text-5xl">
               {currentBlogPost.fields[`title${fieldSuffix}`]}
             </h1>
             <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-base font-semibold text-[#6A8390]">
