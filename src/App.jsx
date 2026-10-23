@@ -31,6 +31,7 @@ import {
 const BASE = import.meta.env.BASE_URL;
 const asset = (path) => `${BASE}${path}`;
 const withBase = (path) => `${BASE}${path.replace(/^\//, '')}`;
+const ONLINE_BOOKING_URL = 'https://app.cehmefe.com/online-booking';
 
 const logo = asset('Logo/cehmefe-logo.png');
 const images = {
@@ -355,9 +356,9 @@ function HeroSection({ t, lang, heroTitleIndex }) {
             </TextMorph>
           </h1>
           <p className="mt-7 max-w-xl text-lg leading-8 text-white/85">{t.hero.subtitle}</p>
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <a
-              href="#agendar"
+              href={ONLINE_BOOKING_URL}
               className="inline-flex items-center justify-center gap-2 rounded-md bg-white px-6 py-4 text-sm font-bold text-[#272829] transition hover:bg-[#F6F1F1]"
             >
               {t.hero.primary}
@@ -368,6 +369,13 @@ function HeroSection({ t, lang, heroTitleIndex }) {
               className="inline-flex items-center justify-center rounded-md border border-white/60 px-6 py-4 text-sm font-bold text-white transition hover:border-white hover:bg-white/10"
             >
               {t.hero.secondary}
+            </a>
+            <a
+              href="https://wa.me/50431680805"
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-white/40 px-5 py-3 text-sm font-semibold text-white/90 transition hover:border-white hover:bg-white/10 sm:self-center"
+            >
+              <MessageCircle size={16} />
+              {t.appointment.whatsapp}
             </a>
           </div>
           <p className="mt-10 max-w-md border-l-2 border-white/50 pl-4 text-xl font-black leading-tight text-white md:text-2xl">
@@ -397,7 +405,7 @@ const content = {
       ],
       subtitle:
         'Centro de medicina fetal en San Pedro Sula, Honduras. Te acompañamos durante el embarazo con estudios especializados de tu bebé, explicando cada resultado con claridad y cuidado.',
-      primary: 'Agendar cita',
+      primary: 'Agendar en línea',
       secondary: 'Ver servicios',
     },
     trust: [
@@ -539,12 +547,13 @@ const content = {
       ],
     },
     appointment: {
-      title: 'Agenda tu cita o escríbenos.',
+      title: 'Agenda tu cita en línea.',
       subtitle:
-        'Atendemos por WhatsApp, llamada o correo. Para orientarte mejor, comparte tus semanas de embarazo, el estudio indicado y si vienes referida por tu médico.',
+        'Reserva tu estudio desde la web. También puedes escribirnos por WhatsApp, llamarnos o enviarnos un correo. Para orientarte mejor, comparte tus semanas de embarazo, el estudio indicado y si vienes referida por tu médico.',
       hours: 'Lunes a viernes 8:00 AM - 6:00 PM · Sábado 9:00 AM - 1:00 PM',
       address: 'Local 1503, Nivel 15, Nuevos Horizontes Business Center, San Pedro Sula.',
       email: 'info@cehmefe.com',
+      online: 'Agendar en línea',
       whatsapp: 'WhatsApp',
       call: 'Llamar',
       directions: 'Abrir en Google Maps',
@@ -573,7 +582,7 @@ const content = {
       ],
       subtitle:
         'Fetal medicine center in San Pedro Sula, Honduras. We accompany you through pregnancy with specialized studies of your baby, explaining each result with clarity and care.',
-      primary: 'Book appointment',
+      primary: 'Book online',
       secondary: 'View services',
     },
     trust: [
@@ -715,12 +724,13 @@ const content = {
       ],
     },
     appointment: {
-      title: 'Book your visit or write to us.',
+      title: 'Book your visit online.',
       subtitle:
-        'We respond by WhatsApp, phone, or email. For better guidance, share your pregnancy week, the requested study, and whether you were referred by your doctor.',
+        'Reserve your study on the web. You can also reach us by WhatsApp, phone, or email. For better guidance, share your pregnancy week, the requested study, and whether you were referred by your doctor.',
       hours: 'Monday to Friday 8:00 AM - 6:00 PM · Saturday 9:00 AM - 1:00 PM',
       address: 'Suite 1503, Level 15, Nuevos Horizontes Business Center, San Pedro Sula.',
       email: 'info@cehmefe.com',
+      online: 'Book online',
       whatsapp: 'WhatsApp',
       call: 'Call',
       directions: 'Open in Google Maps',
@@ -822,7 +832,7 @@ function App() {
               {lang === 'es' ? 'EN' : 'ES'}
             </button>
             <a
-              href={isBlogRoute ? `${BASE}#agendar` : '#agendar'}
+              href={ONLINE_BOOKING_URL}
               className="inline-flex items-center gap-2 rounded-md bg-[#272829] px-4 py-3 text-sm font-bold text-white transition hover:bg-black"
             >
               {t.hero.primary}
@@ -863,6 +873,22 @@ function App() {
               >
                 {lang === 'es' ? 'English' : 'Español'}
               </button>
+              <a
+                href={ONLINE_BOOKING_URL}
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-[#272829] px-4 py-3 text-sm font-bold text-white"
+                onClick={() => setMenuOpen(false)}
+              >
+                {t.hero.primary}
+                <CalendarCheck size={16} />
+              </a>
+              <a
+                href="https://wa.me/50431680805"
+                className="inline-flex items-center justify-center gap-2 rounded-md border border-[#D9D5D5] px-4 py-3 text-sm font-bold text-[#272829]"
+                onClick={() => setMenuOpen(false)}
+              >
+                <MessageCircle size={16} />
+                {t.appointment.whatsapp}
+              </a>
             </div>
           </div>
         )}
@@ -919,10 +945,22 @@ function App() {
                   ? 'La información del blog es orientativa. La indicación final depende de tu historia clínica y de la evaluación médica.'
                   : 'Blog information is for general guidance. The final indication depends on your clinical history and medical evaluation.'}
               </p>
-              <a href={`${BASE}#agendar`} className="mt-5 inline-flex items-center gap-2 rounded-md bg-[#272829] px-5 py-3 text-sm font-bold text-white transition hover:bg-black">
-                {t.hero.primary}
-                <ChevronRight size={16} />
-              </a>
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                <a
+                  href={ONLINE_BOOKING_URL}
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-[#272829] px-5 py-3 text-sm font-bold text-white transition hover:bg-black"
+                >
+                  {t.hero.primary}
+                  <ChevronRight size={16} />
+                </a>
+                <a
+                  href="https://wa.me/50431680805"
+                  className="inline-flex items-center justify-center gap-2 rounded-md border border-[#C7D5DB] px-5 py-3 text-sm font-bold text-[#272829] transition hover:bg-white"
+                >
+                  <MessageCircle size={16} />
+                  {t.appointment.whatsapp}
+                </a>
+              </div>
             </div>
           </article>
         </main>
@@ -1172,21 +1210,30 @@ function App() {
               <div data-reveal>
                 <h2 className="text-4xl font-black leading-tight text-white md:text-6xl">{t.appointment.title}</h2>
                 <p className="mt-6 max-w-xl text-lg leading-8 text-white/85">{t.appointment.subtitle}</p>
-                <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                <div className="mt-9 flex flex-col gap-3">
                   <a
-                    href="https://wa.me/50431680805"
+                    href={ONLINE_BOOKING_URL}
                     className="inline-flex items-center justify-center gap-2 rounded-md bg-white px-6 py-4 text-sm font-bold text-[#272829] transition hover:bg-[#F6F1F1]"
                   >
-                    <MessageCircle size={18} />
-                    {t.appointment.whatsapp} +504 3168-0805
+                    <CalendarCheck size={18} />
+                    {t.appointment.online}
                   </a>
-                  <a
-                    href="tel:+50431680805"
-                    className="inline-flex items-center justify-center gap-2 rounded-md border border-white/60 px-6 py-4 text-sm font-bold text-white transition hover:border-white hover:bg-white/10"
-                  >
-                    <Phone size={18} />
-                    {t.appointment.call} +504 3168-0805
-                  </a>
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <a
+                      href="https://wa.me/50431680805"
+                      className="inline-flex items-center justify-center gap-2 rounded-md border border-white/60 px-6 py-4 text-sm font-bold text-white transition hover:border-white hover:bg-white/10"
+                    >
+                      <MessageCircle size={18} />
+                      {t.appointment.whatsapp} +504 3168-0805
+                    </a>
+                    <a
+                      href="tel:+50431680805"
+                      className="inline-flex items-center justify-center gap-2 rounded-md border border-white/60 px-6 py-4 text-sm font-bold text-white transition hover:border-white hover:bg-white/10"
+                    >
+                      <Phone size={18} />
+                      {t.appointment.call} +504 3168-0805
+                    </a>
+                  </div>
                 </div>
               </div>
 
@@ -1242,13 +1289,22 @@ function App() {
           <div data-reveal>
             <img src={logo} alt="CEHMEFE" className="h-28 w-28 object-contain" />
             <p className="mt-6 max-w-sm text-sm leading-7 text-[#666]">{t.footer.description}</p>
-            <a
-              href="https://wa.me/50431680805"
-              className="mt-7 inline-flex items-center gap-2 rounded-md bg-[#272829] px-5 py-3 text-sm font-bold text-white transition hover:bg-black"
-            >
-              <MessageCircle size={17} />
-              {t.hero.primary}
-            </a>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <a
+                href={ONLINE_BOOKING_URL}
+                className="inline-flex items-center gap-2 rounded-md bg-[#272829] px-5 py-3 text-sm font-bold text-white transition hover:bg-black"
+              >
+                <CalendarCheck size={17} />
+                {t.hero.primary}
+              </a>
+              <a
+                href="https://wa.me/50431680805"
+                className="inline-flex items-center gap-2 rounded-md border border-[#D9D5D5] px-5 py-3 text-sm font-bold text-[#272829] transition hover:bg-[#F8F8F8]"
+              >
+                <MessageCircle size={17} />
+                {t.appointment.whatsapp}
+              </a>
+            </div>
           </div>
 
           <div data-reveal style={{ '--reveal-delay': '90ms' }}>
@@ -1276,7 +1332,8 @@ function App() {
               <a href={sectionHref('#tecnologia')} className="hover:text-[#272829]">{lang === 'es' ? 'Tecnología' : 'Technology'}</a>
               <a href={sectionHref('#especialista')} className="hover:text-[#272829]">{lang === 'es' ? 'Especialista' : 'Specialist'}</a>
               <a href={blogHref} className="hover:text-[#272829]">Blog</a>
-              <a href={sectionHref('#agendar')} className="hover:text-[#272829]">{lang === 'es' ? 'Agendar cita' : 'Book appointment'}</a>
+              <a href={ONLINE_BOOKING_URL} className="hover:text-[#272829]">{t.hero.primary}</a>
+              <a href="https://wa.me/50431680805" className="hover:text-[#272829]">{t.appointment.whatsapp}</a>
               <a
                 className="inline-flex items-center gap-2 hover:text-[#272829]"
                 href="https://www.instagram.com/cehmefe"
