@@ -32,6 +32,11 @@ const BASE = import.meta.env.BASE_URL;
 const asset = (path) => `${BASE}${path}`;
 const withBase = (path) => `${BASE}${path.replace(/^\//, '')}`;
 const ONLINE_BOOKING_URL = 'https://app.cehmefe.com/online-booking';
+const WHATSAPP_NUMBER = '31680805';
+const WHATSAPP_E164 = `504${WHATSAPP_NUMBER}`;
+const WHATSAPP_URL = `https://wa.me/${WHATSAPP_E164}`;
+const PHONE_TEL = `+${WHATSAPP_E164}`;
+const PHONE_DISPLAY = WHATSAPP_NUMBER;
 
 const logo = asset('Logo/cehmefe-logo.png');
 const images = {
@@ -371,7 +376,7 @@ function HeroSection({ t, lang, heroTitleIndex }) {
               {t.hero.secondary}
             </a>
             <a
-              href="https://wa.me/50431680805"
+              href={WHATSAPP_URL}
               className="inline-flex items-center justify-center gap-2 rounded-md border border-white/40 px-5 py-3 text-sm font-semibold text-white/90 transition hover:border-white hover:bg-white/10 sm:self-center"
             >
               <MessageCircle size={16} />
@@ -882,7 +887,7 @@ function App() {
                 <CalendarCheck size={16} />
               </a>
               <a
-                href="https://wa.me/50431680805"
+                href={WHATSAPP_URL}
                 className="inline-flex items-center justify-center gap-2 rounded-md border border-[#D9D5D5] px-4 py-3 text-sm font-bold text-[#272829]"
                 onClick={() => setMenuOpen(false)}
               >
@@ -954,7 +959,7 @@ function App() {
                   <ChevronRight size={16} />
                 </a>
                 <a
-                  href="https://wa.me/50431680805"
+                  href={WHATSAPP_URL}
                   className="inline-flex items-center justify-center gap-2 rounded-md border border-[#C7D5DB] px-5 py-3 text-sm font-bold text-[#272829] transition hover:bg-white"
                 >
                   <MessageCircle size={16} />
@@ -1220,18 +1225,18 @@ function App() {
                   </a>
                   <div className="flex flex-col gap-3 sm:flex-row">
                     <a
-                      href="https://wa.me/50431680805"
+                      href={WHATSAPP_URL}
                       className="inline-flex items-center justify-center gap-2 rounded-md border border-white/60 px-6 py-4 text-sm font-bold text-white transition hover:border-white hover:bg-white/10"
                     >
                       <MessageCircle size={18} />
-                      {t.appointment.whatsapp} +504 3168-0805
-                    </a>
+                      {t.appointment.whatsapp} {PHONE_DISPLAY}
+                  </a>
                     <a
-                      href="tel:+50431680805"
+                      href={`tel:${PHONE_TEL}`}
                       className="inline-flex items-center justify-center gap-2 rounded-md border border-white/60 px-6 py-4 text-sm font-bold text-white transition hover:border-white hover:bg-white/10"
                     >
                       <Phone size={18} />
-                      {t.appointment.call} +504 3168-0805
+                      {t.appointment.call} {PHONE_DISPLAY}
                     </a>
                   </div>
                 </div>
@@ -1298,7 +1303,7 @@ function App() {
                 {t.hero.primary}
               </a>
               <a
-                href="https://wa.me/50431680805"
+                href={WHATSAPP_URL}
                 className="inline-flex items-center gap-2 rounded-md border border-[#D9D5D5] px-5 py-3 text-sm font-bold text-[#272829] transition hover:bg-[#F8F8F8]"
               >
                 <MessageCircle size={17} />
@@ -1316,7 +1321,7 @@ function App() {
               </p>
               <p className="flex gap-3">
                 <Phone className="mt-1 shrink-0 text-[#272829]" size={18} />
-                <a href="tel:+50431680805" className="inline-block py-1.5 hover:text-[#272829]">+504 3168-0805</a>
+                <a href={`tel:${PHONE_TEL}`} className="inline-block py-1.5 hover:text-[#272829]">{PHONE_DISPLAY}</a>
               </p>
               <p className="flex gap-3">
                 <Mail className="mt-1 shrink-0 text-[#272829]" size={18} />
@@ -1333,7 +1338,7 @@ function App() {
               <a href={sectionHref('#especialista')} className="hover:text-[#272829]">{lang === 'es' ? 'Especialista' : 'Specialist'}</a>
               <a href={blogHref} className="hover:text-[#272829]">Blog</a>
               <a href={ONLINE_BOOKING_URL} className="hover:text-[#272829]">{t.hero.primary}</a>
-              <a href="https://wa.me/50431680805" className="hover:text-[#272829]">{t.appointment.whatsapp}</a>
+              <a href={WHATSAPP_URL} className="hover:text-[#272829]">{t.appointment.whatsapp}</a>
               <a
                 className="inline-flex items-center gap-2 hover:text-[#272829]"
                 href="https://www.instagram.com/cehmefe"
